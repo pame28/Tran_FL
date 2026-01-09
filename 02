@@ -1,0 +1,202 @@
+public class ProviderRequestDto
+{
+    public CardDto Card { get; set; }
+    public ClientDto Client { get; set; }
+}
+
+public class CardDto
+{
+    public string Bin { get; set; }
+    public string Last_Four_Digits { get; set; }
+}
+
+public class ClientDto
+{
+    public string Document_Number { get; set; }
+    public string Document_Type { get; set; }
+    public string Gender { get; set; }
+}
+
+
+
+
+
+
+
+
+
+
+CREATE PROCEDURE sp_GetCounterpartData
+    @counterpart_card VARCHAR(20)
+AS
+BEGIN
+    SELECT
+        LEFT(card_number, 6) AS Bin,
+        RIGHT(card_number, 4) AS LastFourDigits,
+        document_number,
+        document_type,
+        gender
+    FROM Counterparts
+    WHERE card_number = @counterpart_card
+END
+
+
+
+
+
+
+
+
+
+public interface ICounterpartRepository
+{
+    Task<CounterpartData> GetCounterpartData(string counterpartCard);
+}
+
+
+
+
+
+
+
+public class CounterpartRepository : ICounterpartRepository
+{
+    private readonly IConfiguration _config;
+
+    public CounterpartRepository(IConfiguration config)
+    {
+        _config = config;
+    }
+
+    public async Task<CounterpartData> GetCounterpartData(string counterpartCard)
+    {
+        using var conn = new SqlConnection(_config.GetConnectionString("Default"));
+        using var cmd = new SqlCommand("sp_GetCounterpartData", conn);
+        cmd.CommandType = CommandType.StoredProcedure;
+        cmd.Parameters.AddWithValue("@counterpart_card", counterpartCard);
+
+        await conn.OpenAsync();
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!reader.Read()) return null;
+
+        return new CounterpartData
+        {
+            Bin = reader["Bin"].ToString(),
+            LastFourDigits = reader["LastFourDigits"].ToString(),
+            DocumentNumber = reader["document_number"].ToString(),
+            DocumentType = reader["document_type"].ToString(),
+            Gender = reader["gender"].ToString()
+        };
+    }
+}
+
+
+
+
+
+
+
+public class ProviderAuthService : IProviderAuthService
+{
+    public Task<TokenResponseDto> GetTokenAsync()
+    {
+        return Task.FromResult(new TokenResponseDto
+        {
+            Access_Token = Guid.NewGuid().ToString(),
+            Expires_In = 2000,
+            Token_Type = "Bearer"
+        });
+    }
+}
+
+
+
+
+
+
+
+public class ProviderApiService : IProviderApiService
+{
+    public ProviderRequestDto BuildRequest(CounterpartData data)
+    {
+        return new ProviderRequestDto
+        {
+            Card = new CardDto
+            {
+                Bin = data.Bin,
+                Last_Four_Digits = data.LastFourDigits
+            },
+            Client = new ClientDto
+            {
+                Document_Number = data.DocumentNumber,
+                Document_Type = data.DocumentType,
+                Gender = data.Gender
+            }
+        };
+    }
+}
+
+
+
+
+
+
+public static class FileLogger
+{
+    public static void Log(string message)
+    {
+        File.AppendAllText("Logs/requests.log",
+            $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {message}\n");
+    }
+}
+
+
+
+
+
+
+[ApiController]
+[Route("api/counterpart")]
+public class CounterpartController : ControllerBase
+{
+    private readonly ICounterpartRepository _repository;
+    private readonly IProviderApiService _providerService;
+
+    public CounterpartController(
+        ICounterpartRepository repository,
+        IProviderApiService providerService)
+    {
+        _repository = repository;
+        _providerService = providerService;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Process([FromBody] CounterpartRequestDto request)
+    {
+        var data = await _repository.GetCounterpartData(request.Counterpart_Card);
+
+        if (data == null)
+            return NotFound("Counterpart card no encontrada");
+
+        var providerRequest = _providerService.BuildRequest(data);
+
+        FileLogger.Log(JsonConvert.SerializeObject(providerRequest));
+
+        return Ok(providerRequest);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
