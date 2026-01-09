@@ -1,0 +1,87 @@
+Mira, necesito crear un Microservicio con las siguientes capas:
+-Models
+-Dtos
+-Repositories
+  ->Interfaces
+  ->Repositories
+-Services
+  ->Interfaces
+  ->Services
+-Controllers
+
+Este microservicio está pensado para que:
+Se conecte con una base de datos SQL y ademas, se conecte con la API de un proveedor externo
+
+Para conectarse hay que generar un token, y ese se genera de la siguiente forma: 
+    las aplicaciones del banco, el cual contendrá las siguientes características:
+• API utilizando Rest, administrado por medio de Openshift.
+• Para la autenticación se utilizará el protocolo de seguridad Auth 2.0 con el grand 
+type client credential.
+• Se utilizará client_id y client_Secret respectivamente, para que se puedan 
+autenticar y obtener el access token. Se debe enviar en cada petición para que 
+puedan tener acceso a los recursos de la APl.
+• Será necesario que el clientld y el secretld se envíen encriptados, utilizado
+algoritmo de llave simétrica AES-256.
+• Los datos de client_id y client_secret serán configurados por la empresa en el 
+sistema  (AS400), para que el servicio de access token pueda 
+corroborar la información recibida y resolver la solicitud.
+• El client_secret quedará encriptado en la BD utilizado el algoritmo de llave simétrica 
+AES256. Se expondrá a solicitud del usuario autorizado, para que pueda copiarlo y 
+configurarlo en sus aplicaciones.
+• la empresa podrá hacer configuración del tiempo de expiración del token, dentro de 
+las propiedades del servicio access token.
+• El token generado deberá enviarse en cada una de las peticiones de los API’s que 
+utilicen este mecanismo de seguridad. Adicionamente deben hacer la renovación 
+antes de la expiración.
+• Se permtiriá configurar dentro de las propiedades del servicio, el porcentaje de 
+tiempo de vida del token, para establecer si el tiempo que falta para la expiración, 
+es menor o igual a este parámetro y proceder con emitir uno nuevo o resolver la 
+solicitud con el token activo, si fuera mayor.
+• Se utilizará para el servicio el certificado de seguridad versión TLS 1.2.
+
+
+Response
+{
+ "access_token": "e23b1fbb73174c69cbe0964c9c25", -> Token de acceso a los recursos de las apis 
+solicitadas
+ "expires_in": "2010", -> Milisegundos de expiracion
+ "token_type": "Bearer" -> Tipo de token
+}
+
+
+IMPORTANTE: Cabe recalcar que aun no estan desarrollada esa api por el proveedor, entonces, no tengo como probar, pero si me gustaria desarrollarla auunque aun no la utilice.
+
+
+
+
+La funcionalidad principal del microservicio es que... el usuario mande esta estructura 
+
+{
+  "counterpart_card": "string",
+  "channel": "string"
+}
+
+
+y el microservicio vaya a la BD de sql y busque  el counterpart_card
+
+cuando la encuentre... necesito que haga el siguiente request:
+la data de ese request lo toma de la tabla que de SQL 
+
+creo que bien podemos hacer un stored procedure para llegar a esta estructura, y solo llamar el stored procedure en el microservicio.
+
+
+
+"card": {
+  "bin": "",
+  "last_four_digits": ""
+ },
+ "client": {
+  "document_number": "",
+  "document_type": "",
+  "gender": ""
+ }
+}
+
+
+Hasta aqui me quiero quedar por mienyras, para verificar que esto se esté haciendo bien, que se muestre en un log o no se :c 
+
