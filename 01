@@ -1,4 +1,4 @@
-Mira, necesito crear un Microservicio con las siguientes capas:
+Mira, necesito crear un Microservicio llamado transacciones_flotantes (de las tarjetas) con las siguientes capas:
 -Models
 -Dtos
 -Repositories
