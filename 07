@@ -1,0 +1,385 @@
+SQL
+
+
+
+CREATE PROCEDURE sp_ObtenerDatosTransaccionFlotante
+    @CounterpartCard VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        t.Bin,
+        RIGHT(t.NumeroTarjeta, 4) AS UltimosCuatroDigitos,
+        c.NumeroDocumento,
+        c.TipoDocumento,
+        c.Sexo
+    FROM Tarjetas t
+    INNER JOIN Clientes c ON t.ClienteId = c.Id
+    WHERE t.NumeroTarjeta = @CounterpartCard
+END
+
+
+
+
+
+
+
+
+
+
+-------------------------
+
+
+
+using transacciones_flotantes.Models.TransaccionesFlotantes;
+
+namespace transacciones_flotantes.Repositories.Interfaces
+{
+    public interface ITransaccionFlotanteRepository
+    {
+        Task<TransaccionFlotanteProveedorDataModel?>
+            ObtenerDatosProveedorAsync(string counterpartCard);
+    }
+}
+
+
+
+
+
+------------------------
+
+
+
+
+using System.Data;
+using System.Data.SqlClient;
+using Dapper;
+using transacciones_flotantes.Models.TransaccionesFlotantes;
+using transacciones_flotantes.Repositories.Interfaces;
+
+namespace transacciones_flotantes.Repositories.Repositories
+{
+    public class TransaccionFlotanteRepository : ITransaccionFlotanteRepository
+    {
+        private readonly IConfiguration _configuration;
+
+        public TransaccionFlotanteRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<TransaccionFlotanteProveedorDataModel?>
+            ObtenerDatosProveedorAsync(string counterpartCard)
+        {
+            using var connection =
+                new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+            return await connection.QueryFirstOrDefaultAsync<
+                TransaccionFlotanteProveedorDataModel>(
+                "sp_ObtenerDatosTransaccionFlotante",
+                new { CounterpartCard = counterpartCard },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+    }
+}
+
+
+
+
+
+
+
+--------------------------------------
+
+
+
+namespace transacciones_flotantes.Services.Interfaces
+{
+    public interface IProveedorTokenService
+    {
+        Task<string> ObtenerAccessTokenAsync();
+    }
+}
+
+
+
+
+
+
+------------------------------------
+
+
+
+
+using System.Net.Http.Headers;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using transacciones_flotantes.Services.Interfaces;
+
+namespace transacciones_flotantes.Services.Services
+{
+    public class ProveedorTokenService : IProveedorTokenService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProveedorTokenService> _logger;
+
+        private string? _token;
+        private DateTime _expiracion;
+
+        public ProveedorTokenService(
+            HttpClient httpClient,
+            IConfiguration configuration,
+            ILogger<ProveedorTokenService> logger)
+        {
+            _httpClient = httpClient;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<string> ObtenerAccessTokenAsync()
+        {
+            if (!string.IsNullOrEmpty(_token) && DateTime.UtcNow < _expiracion)
+                return _token;
+
+            _logger.LogInformation("Solicitando nuevo access token al proveedor");
+
+            var response = await _httpClient.PostAsync(
+                _configuration["Proveedor:TokenUrl"],
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    { "grant_type", "client_credentials" },
+                    { "client_id", _configuration["Proveedor:ClientId"] },
+                    { "client_secret", _configuration["Proveedor:ClientSecret"] }
+                })
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonSerializer.Deserialize<JsonElement>(json);
+
+            _token = tokenResponse.GetProperty("access_token").GetString();
+            var expiresIn = tokenResponse.GetProperty("expires_in").GetInt32();
+
+            _expiracion = DateTime.UtcNow.AddMilliseconds(expiresIn * 0.8);
+
+            return _token!;
+        }
+    }
+}
+
+
+
+
+
+
+
+--------------------
+
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+
+namespace transacciones_flotantes.Services.Interfaces
+{
+    public interface IProveedorApiClient
+    {
+        Task<string> EnviarTransaccionAsync(
+            ProveedorTransaccionFlotanteRequestDto request);
+    }
+}
+
+
+
+
+
+----------------
+
+
+
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Services.Interfaces;
+
+namespace transacciones_flotantes.Services.Services
+{
+    public class ProveedorApiClient : IProveedorApiClient
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IProveedorTokenService _tokenService;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProveedorApiClient> _logger;
+
+        public ProveedorApiClient(
+            HttpClient httpClient,
+            IProveedorTokenService tokenService,
+            IConfiguration configuration,
+            ILogger<ProveedorApiClient> logger)
+        {
+            _httpClient = httpClient;
+            _tokenService = tokenService;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<string> EnviarTransaccionAsync(
+            ProveedorTransaccionFlotanteRequestDto request)
+        {
+            var token = await _tokenService.ObtenerAccessTokenAsync();
+
+            var httpRequest = new HttpRequestMessage(
+                HttpMethod.Post,
+                _configuration["Proveedor:TransaccionesUrl"]);
+
+            httpRequest.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(request),
+                Encoding.UTF8,
+                "application/json");
+
+            _logger.LogInformation("Enviando request al proveedor externo");
+
+            var response = await _httpClient.SendAsync(httpRequest);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStringAsync();
+        }
+    }
+}
+
+
+
+
+
+
+------------------
+
+
+
+
+using Microsoft.Extensions.Logging;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repositories.Interfaces;
+using transacciones_flotantes.Services.Interfaces;
+
+namespace transacciones_flotantes.Services.Services
+{
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+    {
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ILogger<TransaccionesFlotantesService> _logger;
+
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ILogger<TransaccionesFlotantesService> logger)
+        {
+            _repository = repository;
+            _proveedorClient = proveedorClient;
+            _logger = logger;
+        }
+
+        public async Task<string> ProcesarAsync(
+            TransaccionesFlotantesRequestDto request)
+        {
+            var data =
+                await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+            if (data == null)
+                throw new Exception("Tarjeta no encontrada");
+
+            var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+            {
+                Card = new()
+                {
+                    Bin = data.Bin,
+                    UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                },
+                Client = new()
+                {
+                    NumeroDocumento = data.NumeroDocumento,
+                    TipoDocumento = data.TipoDocumento,
+                    Sexo = data.Sexo
+                }
+            };
+
+            return await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+        }
+    }
+}
+
+
+
+
+
+
+-------------------
+
+
+
+using Microsoft.AspNetCore.Mvc;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Services.Interfaces;
+
+namespace transacciones_flotantes.Controllers
+{
+    [ApiController]
+    [Route("api/transacciones-flotantes")]
+    public class TransaccionesFlotantesController : ControllerBase
+    {
+        private readonly ITransaccionesFlotantesService _service;
+
+        public TransaccionesFlotantesController(
+            ITransaccionesFlotantesService service)
+        {
+            _service = service;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Procesar(
+            [FromBody] TransaccionesFlotantesRequestDto request)
+        {
+            var resultado = await _service.ProcesarAsync(request);
+            return Ok(resultado);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+-----------
+
+
+PROGRAM.cs
+
+builder.Services.AddScoped<ITransaccionFlotanteRepository,
+    TransaccionFlotanteRepository>();
+
+builder.Services.AddScoped<ITransaccionesFlotantesService,
+    TransaccionesFlotantesService>();
+
+builder.Services.AddScoped<IProveedorTokenService,
+    ProveedorTokenService>();
+
+builder.Services.AddScoped<IProveedorApiClient,
+    ProveedorApiClient>();
+
+builder.Services.AddHttpClient();
+
+
+
+
+
