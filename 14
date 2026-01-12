@@ -1,0 +1,4 @@
+Mira que me devuelve muy bien la info, pero me gustaria que se mostrara con los saltos de linea, para entender bien el Json
+
+
+{"total_floating":{"total_HNL":0,"total_USD":0},"authorizations":[{"transaction_type":"COMPRAS","date":"2026-01-12T20:53:19\u002B00:00","currency":"HNL","amount":300,"merchant_name":"WALMART BOULEVARD DEL NOR","reference":"123456","movement_type":"C"}]}
