@@ -1,0 +1,71 @@
+namespace transacciones_flotantes.Models.TransaccionesFlotantes
+{
+    public class TransaccionFlotanteProveedorDataModel
+    {
+        public string BinTarjeta {  get; set; }
+        public string UltimosCuatroDigitos { get; set; }
+        public string NoDocumento { get; set; }
+        public string TipoDocumento { get; set; }
+        public string Sexo { get;set; }
+
+    }
+}
+
+
+
+
+-------------------------------------
+
+
+using System.ComponentModel.DataAnnotations;
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class TransaccionesFlotantesRequestDto
+    {
+        public string counterpart_card { get; set; }
+        public string channel { get; set; }
+    }
+}
+
+
+
+----------------------------------------
+
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class ProveedorTransaccionFlotanteRequestDto
+    {
+        public ProveedorTarjetaDto Card { get; set; }
+        public ProveedorClienteDto Client { get; set; }
+    }
+}
+
+
+
+
+---------------------------------------------------
+
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class ProveedorTarjetaDto
+    {
+        public string TarjetaBin { get; set; }
+        public string UltimosCuatroDigitos { get; set; }
+    }
+}
+
+
+-------------------------------------------------
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class ProveedorClienteDto
+    {
+        public string NoDocumento { get; set; }
+        public string TipoDocumento { get; set; }
+        public string Sexo { get; set; }
+    }
+}
