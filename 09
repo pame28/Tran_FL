@@ -1,0 +1,102 @@
+System.AggregateException
+  HResult=0x80131500
+  Mensaje = Some services are not able to be constructed (Error while validating the service descriptor 'ServiceType: transacciones_flotantes.Service.Interface.ITransaccionesFlotantesService Lifetime: Scoped ImplementationType: transacciones_flotantes.Service.TransaccionesFlotantesService': Unable to resolve service for type 'System.Net.Http.HttpClient' while attempting to activate 'transacciones_flotantes.Service.ProveedorApiClient'.) (Error while validating the service descriptor 'ServiceType: transacciones_flotantes.Repository.Interface.IProveedorTokenService Lifetime: Scoped ImplementationType: transacciones_flotantes.Service.ProveedorTokenService': Unable to resolve service for type 'System.Net.Http.HttpClient' while attempting to activate 'transacciones_flotantes.Service.ProveedorTokenService'.) (Error while validating the service descriptor 'ServiceType: transacciones_flotantes.Service.Interface.IProveedorApiClient Lifetime: Scoped ImplementationType: transacciones_flotantes.Service.ProveedorApiClient': Unable to resolve service for type 'System.Net.Http.HttpClient' while attempting to activate 'transacciones_flotantes.Service.ProveedorApiClient'.) (Error while validating the service descriptor 'ServiceType: transacciones_flotantes.Service.Interface.ITransaccionesFlotantesService Lifetime: Scoped ImplementationType: transacciones_flotantes.Service.TransaccionesFlotantesService': Unable to resolve service for type 'System.Net.Http.HttpClient' while attempting to activate 'transacciones_flotantes.Service.ProveedorApiClient'.)
+  Origen = Microsoft.Extensions.DependencyInjection
+  Seguimiento de la pila:
+   en Microsoft.Extensions.DependencyInjection.ServiceProvider..ctor(ICollection`1 serviceDescriptors, ServiceProviderOptions options)
+   en Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(IServiceCollection services, ServiceProviderOptions options)
+   en Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   en Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   en Program.<Main>$(String[] args) en C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes\Program.cs: línea 64
+
+  Esta excepción se generó originalmente en esta pila de llamadas:
+    [Código externo]
+
+Excepción interna 1:
+InvalidOperationException: Error while validating the service descriptor 'ServiceType: transacciones_flotantes.Service.Interface.ITransaccionesFlotantesService Lifetime: Scoped ImplementationType: transacciones_flotantes.Service.TransaccionesFlotantesService': Unable to resolve service for type 'System.Net.Http.HttpClient' while attempting to activate 'transacciones_flotantes.Service.ProveedorApiClient'.
+
+Excepción interna 2:
+InvalidOperationException: Unable to resolve service for type 'System.Net.Http.HttpClient' while attempting to activate 'transacciones_flotantes.Service.ProveedorApiClient'.
+
+
+
+
+using transacciones_flotantes.Infrastructure.Data;
+using transacciones_flotantes.Repository;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service;
+using transacciones_flotantes.Service.Interface;
+using transacciones_flotantes.Utils;
+using Serilog;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+
+// Dependency Injection
+builder.Services.AddScoped<DBHelper>();
+builder.Services.AddScoped<IProductRepository, ProductsRepositoryImp>();
+builder.Services.AddScoped<IProductService, ProductsServiceImpl>();
+builder.Services.AddScoped<IPaymentsRepository, PaymentsRepositoryImp>();
+builder.Services.AddScoped<IPaymentsService, PaymentsServiceImpl>();
+builder.Services.AddScoped<IParametrosRepository, ParametrosRepositoryImp>();
+builder.Services.AddScoped<IValidationService, ValidationServiceImp>();
+
+
+builder.Services.AddScoped<ITransaccionFlotanteRepository,
+    TransaccionFlotanteRepository>();
+
+builder.Services.AddScoped<ITransaccionesFlotantesService,
+    TransaccionesFlotantesService>();
+
+builder.Services.AddScoped<IProveedorTokenService,
+    ProveedorTokenService>();
+
+builder.Services.AddScoped<IProveedorApiClient,
+    ProveedorApiClient>();
+
+builder.Services.AddScoped<ITransaccionesFlotantesService, 
+    TransaccionesFlotantesService>();
+
+builder.Services.AddScoped<GeneralResponseFn>();
+
+// Configuración de Serilog
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithThreadId() // agrega hilo de ejecución
+    .WriteTo.Console(
+        outputTemplate: "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{ThreadId}] [{Level,-5}] {SourceContext} - {Message:lj}{NewLine}{Exception}"
+    )
+    .WriteTo.File(
+        "logs/log-.txt",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{ThreadId}] [{Level,-5}] {SourceContext} - {Message:lj}{NewLine}{Exception}"
+    )
+    .CreateLogger();
+
+
+builder.Host.UseSerilog();
+
+
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
