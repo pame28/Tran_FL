@@ -1,4 +1,26 @@
 
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+
+namespace transacciones_flotantes.Services.Interfaces
+{
+    /// <summary>
+    /// Define la lógica de negocio para procesar transacciones flotantes
+    /// </summary>
+    public interface ITransaccionesFlotantesService
+    {
+        /// <summary>
+        /// Procesa una transacción flotante: obtiene datos de la BD,
+        /// mapea al DTO del proveedor y envía la solicitud a la API externa.
+        /// </summary>
+        /// <param name="request">Solicitud del usuario con counterpart_card y canal</param>
+        /// <returns>Respuesta cruda de la API del proveedor</returns>
+        Task<string> ProcesarAsync(TransaccionesFlotantesRequestDto request);
+    }
+}
+
+
+
+
 
 
 
