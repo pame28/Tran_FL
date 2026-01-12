@@ -1,0 +1,136 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=TransaccionesFlotantes;User Id=sa;Password=TuPassword;"
+  },
+  "Proveedor": {
+    "TokenUrl": "https://localhost:5001/token",             // Simulador de token
+    "TransaccionesUrl": "https://localhost:5002/transacciones", // Simulador de API
+    "ClientId": "MI_CLIENT_ID",
+    "ClientSecret": "MI_SECRET_DE_PRUEBA"
+  },
+  "AS400": {
+    "Url": "https://simulador-as400.local",
+    "Usuario": "TEST",
+    "Password": "TEST123"
+  }
+}
+
+
+
+
+
+
+
+
+-------
+
+
+
+using System.Net.Http.Headers;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using transacciones_flotantes.Services.Interfaces;
+
+namespace transacciones_flotantes.Services.Services
+{
+    public class ProveedorTokenService : IProveedorTokenService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProveedorTokenService> _logger;
+
+        private string? _token;
+        private DateTime _expiracion;
+
+        public ProveedorTokenService(HttpClient httpClient, IConfiguration configuration, ILogger<ProveedorTokenService> logger)
+        {
+            _httpClient = httpClient;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<string> ObtenerAccessTokenAsync()
+        {
+            if (!string.IsNullOrEmpty(_token) && DateTime.UtcNow < _expiracion.AddSeconds(-10))
+                return _token;
+
+            _logger.LogInformation("Solicitando nuevo access token al proveedor (simulación)");
+
+            // Simulamos request al endpoint de token
+            var response = await _httpClient.PostAsync(_configuration["Proveedor:TokenUrl"],
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    { "client_id", _configuration["Proveedor:ClientId"] },
+                    { "client_secret", _configuration["Proveedor:ClientSecret"] },
+                    { "grant_type", "client_credentials" }
+                })
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonSerializer.Deserialize<JsonElement>(json);
+
+            _token = tokenResponse.GetProperty("access_token").GetString();
+            var expiresIn = tokenResponse.GetProperty("expires_in").GetInt32();
+            _expiracion = DateTime.UtcNow.AddMilliseconds(expiresIn * 0.8); // refresca 10% antes
+
+            return _token!;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+-------------------
+
+
+
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Services.Interfaces;
+
+namespace transacciones_flotantes.Services.Services
+{
+    public class ProveedorApiClient : IProveedorApiClient
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IProveedorTokenService _tokenService;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProveedorApiClient> _logger;
+
+        public ProveedorApiClient(HttpClient httpClient, IProveedorTokenService tokenService,
+            IConfiguration configuration, ILogger<ProveedorApiClient> logger)
+        {
+            _httpClient = httpClient;
+            _tokenService = tokenService;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<string> EnviarTransaccionAsync(ProveedorTransaccionFlotanteRequestDto request)
+        {
+            var token = await _tokenService.ObtenerAccessTokenAsync();
+
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, _configuration["Proveedor:TransaccionesUrl"]);
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            httpRequest.Content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+
+            _logger.LogInformation("Enviando request al proveedor simulado");
+            var response = await _httpClient.SendAsync(httpRequest);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStringAsync();
+        }
+    }
+}
+
