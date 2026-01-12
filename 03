@@ -1,0 +1,74 @@
+Actualmente tengo esto creado 
+
+
+namespace transacciones_flotantes.Models.TransaccionesFlotantes
+{
+    public class RequestTransaccionesFlotantes
+    {
+        public string BinTarjeta {  get; set; }
+        public string UltimosCuatroDigitos { get; set; }
+        public string NoDocumento { get; set; }
+        public string TipoDocumento { get; set; }
+        public string Sexo { get;set; }
+
+    }
+}
+
+
+---------------------------------------------------------
+
+
+
+using System.ComponentModel.DataAnnotations;
+
+namespace transacciones_flotantes.Models.TransaccionesFlotantes
+{
+    public class TransaccionesFlotantes
+    {
+        [Required(ErrorMessage = "El numero de tarjeta es obligatorio")]
+        public string counterpart_card { get; set; }
+        [Required(ErrorMessage = "El canal que ingresa la solicitud es obligatorio")]
+        public string channel { get; set; }
+    }
+}
+
+
+
+
+------------------------------------------------------------
+
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class CardDto
+    {
+        public string TarjetaBin { get; set; }
+        public string UltimosCuatroDigitos { get; set; }
+    }
+}
+
+
+
+
+-----------------------------------------------------------------
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class ClientDto
+    {
+        public string NoDocumento { get; set; }
+        public string TipoDocumento { get; set; }
+        public string Sexo { get; set; }
+    }
+}
+
+
+
+
+
+
+---------------------------------------------------------
+
+
+
+Me parece que lo puedo entender mejor y tiene mas sentido, podemos basarnos de eso para lo demas? dime si me hace falta algun model o DTO
