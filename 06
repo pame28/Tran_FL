@@ -1,0 +1,77 @@
+namespace transacciones_flotantes.Models.TransaccionesFlotantes
+{
+    public class TransaccionFlotanteProveedorDataModel
+    {
+        public string Bin {  get; set; }
+        public string UltimosCuatroDigitos { get; set; }
+        public string NumeroDocumento { get; set; }
+        public string TipoDocumento { get; set; }
+        public string Sexo { get;set; }
+
+    }
+}
+
+
+
+
+--------------------------------------
+
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class TransaccionesFlotantesRequestDto
+    {
+
+        [Required(ErrorMessage = "El numero de tarjeta es obligatorio")]
+        [JsonPropertyName("counterpart_card")]
+        public string CounterpartCard { get; set; }
+
+        [Required(ErrorMessage = "El canal que ingresa la solicitud es obligatorio")]
+        [JsonPropertyName("channel")]
+        public string Channel { get; set; }
+    }
+}
+
+
+---------------------------------------------------------------
+
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class ProveedorTransaccionFlotanteRequestDto
+    {
+        public ProveedorTarjetaDto Card { get; set; }
+        public ProveedorClienteDto Client { get; set; }
+    }
+}
+
+
+-------------------------------------------------------------
+
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class ProveedorTarjetaDto
+    {
+        public string Bin { get; set; }
+        public string UltimosCuatroDigitos { get; set; }
+    }
+}
+
+
+
+---------------------------------------------------------------
+
+
+
+namespace transacciones_flotantes.DTOs.TransaccionesFlotantes
+{
+    public class ProveedorClienteDto
+    {
+        public string NumeroDocumento { get; set; }
+        public string TipoDocumento { get; set; }
+        public string Sexo { get; set; }
+    }
+}
