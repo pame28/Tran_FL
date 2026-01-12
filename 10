@@ -1,0 +1,87 @@
+using System.Net.Http;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using transacciones_flotantes.Services.Interfaces;
+
+namespace transacciones_flotantes.Services.Services
+{
+    public class ProveedorTokenService : IProveedorTokenService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProveedorTokenService> _logger;
+
+        private string? _token;
+        private DateTime _expiracion;
+        private readonly SemaphoreSlim _lock = new(1, 1);
+
+        public ProveedorTokenService(
+            HttpClient httpClient,
+            IConfiguration configuration,
+            ILogger<ProveedorTokenService> logger)
+        {
+            _httpClient = httpClient;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<string> ObtenerAccessTokenAsync()
+        {
+            var margenSeguridad = TimeSpan.FromSeconds(10);
+
+            if (!string.IsNullOrEmpty(_token) && DateTime.UtcNow < _expiracion - margenSeguridad)
+                return _token;
+
+            await _lock.WaitAsync();
+            try
+            {
+                // doble verificación para concurrencia
+                if (!string.IsNullOrEmpty(_token) && DateTime.UtcNow < _expiracion - margenSeguridad)
+                    return _token;
+
+                _logger.LogInformation("Solicitando nuevo access token al proveedor...");
+
+                var clientId = _configuration["Proveedor:ClientId"];
+                var clientSecret = _configuration["Proveedor:ClientSecret"];
+                var tokenUrl = _configuration["Proveedor:TokenUrl"];
+
+                var response = await _httpClient.PostAsync(
+                    tokenUrl,
+                    new FormUrlEncodedContent(new Dictionary<string, string>
+                    {
+                        { "grant_type", "client_credentials" },
+                        { "client_id", clientId },
+                        { "client_secret", clientSecret }
+                    })
+                );
+
+                response.EnsureSuccessStatusCode();
+
+                var json = await response.Content.ReadAsStringAsync();
+                var tokenResponse = JsonSerializer.Deserialize<JsonElement>(json);
+
+                _token = tokenResponse.GetProperty("access_token").GetString();
+                var expiresIn = tokenResponse.GetProperty("expires_in").GetInt32();
+
+                // Ajustamos expiración con margen de seguridad
+                _expiracion = DateTime.UtcNow.AddSeconds(expiresIn * 0.8);
+
+                _logger.LogInformation("Nuevo token obtenido correctamente");
+                return _token!;
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
