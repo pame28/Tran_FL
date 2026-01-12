@@ -1,87 +1,53 @@
-using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
 using transacciones_flotantes.Services.Interfaces;
 
 namespace transacciones_flotantes.Services.Services
 {
-    public class ProveedorTokenService : IProveedorTokenService
+    public class ProveedorApiClient : IProveedorApiClient
     {
         private readonly HttpClient _httpClient;
+        private readonly IProveedorTokenService _tokenService;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<ProveedorTokenService> _logger;
+        private readonly ILogger<ProveedorApiClient> _logger;
 
-        private string? _token;
-        private DateTime _expiracion;
-        private readonly SemaphoreSlim _lock = new(1, 1);
-
-        public ProveedorTokenService(
+        public ProveedorApiClient(
             HttpClient httpClient,
+            IProveedorTokenService tokenService,
             IConfiguration configuration,
-            ILogger<ProveedorTokenService> logger)
+            ILogger<ProveedorApiClient> logger)
         {
             _httpClient = httpClient;
+            _tokenService = tokenService;
             _configuration = configuration;
             _logger = logger;
         }
 
-        public async Task<string> ObtenerAccessTokenAsync()
+        public async Task<string> EnviarTransaccionAsync(ProveedorTransaccionFlotanteRequestDto request)
         {
-            var margenSeguridad = TimeSpan.FromSeconds(10);
+            var token = await _tokenService.ObtenerAccessTokenAsync();
 
-            if (!string.IsNullOrEmpty(_token) && DateTime.UtcNow < _expiracion - margenSeguridad)
-                return _token;
+            var httpRequest = new HttpRequestMessage(
+                HttpMethod.Post,
+                _configuration["Proveedor:TransaccionesUrl"]);
 
-            await _lock.WaitAsync();
-            try
-            {
-                // doble verificación para concurrencia
-                if (!string.IsNullOrEmpty(_token) && DateTime.UtcNow < _expiracion - margenSeguridad)
-                    return _token;
+            httpRequest.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
 
-                _logger.LogInformation("Solicitando nuevo access token al proveedor...");
+            httpRequest.Content = new StringContent(
+                JsonSerializer.Serialize(request),
+                Encoding.UTF8,
+                "application/json");
 
-                var clientId = _configuration["Proveedor:ClientId"];
-                var clientSecret = _configuration["Proveedor:ClientSecret"];
-                var tokenUrl = _configuration["Proveedor:TokenUrl"];
+            _logger.LogInformation("Enviando request al proveedor externo...");
 
-                var response = await _httpClient.PostAsync(
-                    tokenUrl,
-                    new FormUrlEncodedContent(new Dictionary<string, string>
-                    {
-                        { "grant_type", "client_credentials" },
-                        { "client_id", clientId },
-                        { "client_secret", clientSecret }
-                    })
-                );
+            var response = await _httpClient.SendAsync(httpRequest);
+            response.EnsureSuccessStatusCode();
 
-                response.EnsureSuccessStatusCode();
-
-                var json = await response.Content.ReadAsStringAsync();
-                var tokenResponse = JsonSerializer.Deserialize<JsonElement>(json);
-
-                _token = tokenResponse.GetProperty("access_token").GetString();
-                var expiresIn = tokenResponse.GetProperty("expires_in").GetInt32();
-
-                // Ajustamos expiración con margen de seguridad
-                _expiracion = DateTime.UtcNow.AddSeconds(expiresIn * 0.8);
-
-                _logger.LogInformation("Nuevo token obtenido correctamente");
-                return _token!;
-            }
-            finally
-            {
-                _lock.Release();
-            }
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }
-
-
-
-
-
-
-
-
-
