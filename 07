@@ -1,28 +1,4 @@
 
-using transacciones_flotantes.DTOs.TransaccionesFlotantes;
-
-namespace transacciones_flotantes.Services.TransaccionesFlotantes
-{
-    /// <summary>
-    /// Interfaz que define la lógica de negocio para las transacciones flotantes
-    /// </summary>
-    public interface ITransaccionFlotanteService
-    {
-        /// <summary>
-        /// Obtiene la estructura de datos que será enviada al proveedor
-        /// a partir de la solicitud de transacción flotante.
-        /// </summary>
-        /// <param name="request">DTO con el counterpart_card y canal</param>
-        /// <returns>DTO listo para enviar al proveedor o null si no se encuentra</returns>
-        Task<ProveedorTransaccionFlotanteRequestDto?> ObtenerTransaccionFlotanteAsync(
-            TransaccionesFlotantesRequestDto request);
-    }
-}
-
-
-
-
-
 
 
 
