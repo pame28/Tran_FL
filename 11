@@ -1,0 +1,36 @@
+Si, ayudame con todas las midificaciones que hay que realizar para poder realizar pruebas, quiero que todo sea tan facil para que,cualquier otro desarrollador pueda realizar las modificaciones para produccion sin necesidad de saber como funciona el microservicio.
+Quiero que se encargue de mi conexion de SQL, de AS400 y de la api de mi proveedor. Quiero que eso solo esté de cambiar unas ciertas lineas en el setting mas no en el desarrollo.
+
+
+Dame archivos completos paso a paso. y recuerda que, para los proyectos simuladores ... necesito que el acceesToken devuelva asi:
+
+Response
+{
+ "access_token": "e23b1fbb73174c69cbe0964c9c25", -> Token de acceso a los recursos de las apis solicitadas
+ "expires_in": "2010", -> Milisegundos de expiracion
+ "token_type": "Bearer" -> Tipo de token
+}
+
+
+y que el token lo mande en el header para las consultas de Transacciones Flotantes
+
+y necesito que ese reponse sea asi: 
+
+{
+"total_floating": {
+ "total_HNL": 0,
+ "total_USD": 0
+ },
+ "authorizations": [ -> Listado de transacciones
+ {
+ "transaction_type": "COMPRAS", -> Tipo de transaccion: compra, adelanto, pago, etc.
+ "date": "2025-05-27T22:03:44+0000", -> Fecha de transaccion
+ "currency": "HNL", -> Moneda en formato ISO4217 ejemplo: HNL, USD
+ "amount": 300.00, -> Monto de la transaccion
+ "merchant_name": "WALMART BOULEVARD DEL NOR", -> Nombre del comercio donde se 
+realizó la transaccion
+ "reference":"" -> Numero de secuencia de la transaccion
+ "movement_type":"" -> Tipo de movimiento: C = Crédito, D= Débito
+ }
+ ]
+}
