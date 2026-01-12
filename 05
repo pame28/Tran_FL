@@ -1,0 +1,263 @@
+Clean Architecture
+La arquitectura definida para el desarrollo de los microservicios del CORE tiene un enfoque de arquitectura en capas, basado en MVC adoptando patrones de diseño conocidos e incorporando los principios de Clean Architecture. Este modelo garantiza una separación clara de responsabilidades, mayor mantenibilidad y la posibilidad de escalar o integrar nuevos componentes de forma ordenada.
+Capas principales:
+Controllers: capa de presentación para exponer los servicios. 
+Service: lógica de negocio (PaymentsServiceImpl, ValidationServiceImp).
+Repository: acceso a datos (PaymentsRepository, ValidationsRepositoryImp).
+Infraestructure: contiene la lógica de acceso a bases de datos. 
+DTOs: transferencia de datos (CreatePaymentDto, PaymentDto).
+Models: entidades de dominio (Payment, Product).
+Utils: utilidades comunes (Constantes, GeneralResponseFn).
+ 
+Los Controllers reciben las solicitudes HTTP y trabajan con DTOs para transportar datos. La lógica de negocio se concentra en los Services, que aplican reglas y llaman a los Repositories para acceder a la base de datos. Los Repositories usan la Infrastructure para manejar detalles técnicos como conexiones o adaptadores externos. El dominio se representa con Models, mientras que los Utils ofrecen funciones auxiliares.
+Para mantener estandarizado el desarrollo de los microservicios es necesario conocer los patrones de diseño principales utilizados por lo cual recomendamos leer la siguiente sección para conocer más acerca de cada uno. 
+Patrones de Diseño
+MVC
+El propósito principal del patrón es separar la aplicación en tres componentes principales para organizar mejor el código y facilitar la mantenibilidad, la separación de responsabilidades y pruebas unitarias. 
+ 
+Componentes:
+•	Model: representa los datos y la lógica del negocio.
+•	View: es la capa de presentación que muestra la información al usuario en este caso las respuestas en formato JSON.
+•	Controller: actúa como intermediario. Recibe las solicitudes del cliente, coordina con los Services y devuelve la respuesta adecuada. 
+Repository 
+El propósito principal del patrón Repository es encapsular el acceso a la base de datos y separar la lógica de persistencia de la lógica de negocio, facilitando el mantenimiento y reutilización de lógica reduciendo la duplicidad de código. 
+Aplicar correctamente el patrón Repostory facilita pruebas unitarias, pero la principal ventaja es la posibilidad de cambiar la tecnología de base de datos sin afectar la lógica de negocio.
+Cómo usarlo:
+•	Definir una interfaz (IPaymentRepository) con operaciones como Add, GetById, List, que serán los métodos que se exponen a la capa de Service. 
+•	Implementa la interfaz en una clase concreta (PaymentRepositoryImp) que usa la base de datos atreves de la capa de Infraestructura.
+•	Manejar las excepciones relacionadas con la base de datos dependiendo del motor que estemos usando SQL Server, DB2, MySQL. 
+ 
+Service 
+El patrón de diseño Service contiene la lógica de negocio y coordina el flujo entre los controladores, repositorios y otros componentes. Mantiene los controladores livianos y asegura que las reglas del negocio estén en un solo lugar.
+La principal ventaja de este patrón es la mejora de la mantenibilidad y reutilización de lógica en distintos puntos de la aplicación.
+Cómo usarlo:
+•	Un PaymentService valida reglas (ej. “un producto no puede tener más de dos pagos”).
+•	Llama al repositorio para guardar o consultar datos.
+ 
+Dependency Injection
+Este patrón consiste en invertir el control de creación de dependencias, en lugar de que una clase cree directamente sus objetos, se inyectan desde un contenedor externo.
+Beneficios principales:
+•	Desacoplamiento: las clases no dependen de implementaciones, sino de interfaces.
+•	Pruebas: facilita pruebas unitarias al poder inyectar mocks o stubs.
+•	Flexibilidad: cambiar implementaciones sin modificar el código consumidor.
+•	Mantenibilidad: el código es más limpio y fácil de extender.
+Cómo lo usamos
+•	Registrar interfaces y sus implementaciones en el contenedor de DI (IPaymentRepository → PaymentRepository).
+•	El framework (ej. ASP.NET Core) se encarga de proveer la instancia cuando se necesita en un controlador o servicio.
+ 
+Strategy
+El patrón de estrategia es muy importante, se usa cuando tenemos varias formas de realizar una misma operación y necesitamos poder intercambiarlas dinámicamente sin cambiar el código.
+Beneficios principales:
+•	Flexibilidad: puedes cambiar el flujo en tiempo de ejecución.
+•	Desacoplamiento: el contexto no necesita conocer los detalles de cada estrategia.
+•	Extensibilidad: agregar nuevas estrategias no rompe el código existente.
+Cómo lo usamos
+•	El cliente envía una transacción con una tarjeta BIN 411111.
+•	El contexto de pago detecta que es BIN migrado y corresponde al CORE migrado.
+•	Se selecciona la estrategia del CORE migrado y se procesa allí.
+•	Si el BIN 411111 no es migrado corresponde a CORE legado y se usa esa estrategia.
+  
+Principios de Diseño Aplicados
+En el desarrollo de nuestros servicios se aplican principios de diseño de software que garantizan claridad, mantenibilidad y escalabilidad. Entre los más relevantes se encuentran:
+•	Responsabilidad Única (SRP): cada clase debe cumplir una sola función dentro del sistema. Ejemplo: la clase Constantes se limita a definir valores estáticos, mientras que ValidationService se encarga exclusivamente de las validaciones de negocio.
+•	Inyección de Dependencias: los servicios (como PaymentsServiceImp y ValidationServiceImp) reciben sus dependencias a través del constructor. Esto evita el acoplamiento directo y facilita la sustitución o prueba de componentes.
+•	Separación de Responsabilidades: la lógica de validación se mantiene independiente de la lógica de persistencia y de la generación de respuestas, asegurando un código modular y fácil de mantener.
+•	Código Declarativo: se favorece el uso de estructuras claras y expresivas (condicionales bien definidos) en lugar de excepciones genéricas para representar reglas de negocio, lo que mejora la legibilidad.
+•	Extensibilidad: el diseño permite agregar nuevas validaciones o funcionalidades sin alterar la estructura base.
+Adicionalmente recomendamos seguir los siguientes principios de código limpio:
+•	OCP (Open/Closed Principle) Una clase, módulo o componente debe estar abierto para extensión, pero cerrado para modificación. 
+•	DIP (Dependency Inversion Principle) Los módulos de alto nivel no deben depender de implementaciones concretas, sino de abstracciones (interfaces). 
+•	ISP (Interface Segregation Principle) Las interfaces deben ser específicas y pequeñas, evitando obligar a las clases a implementar métodos que no necesitan.
+•	DRY (Don’t Repeat Yourself) La lógica y el conocimiento deben estar definidos en un solo lugar. 
+•	KISS (Keep It Simple) El diseño y el código deben ser lo más simples posible, sin complejidad innecesaria.  
+Estándares de Desarrollo
+Nombres claros: 
+•	Clases terminan en Service, Repository, Dto.
+•	Interfaces comienzan con I ejemplo: IPaymentRepository 
+•	Métodos deben describir claramente su acción ejemplo: AddPayment, GetPaymentsByProductId
+Convenciones de código:
+•	Uso de PascalCase para clases, interfaces y métodos.
+•	Uso de camelCase para variables y parámetros.
+•	Constantes en MAYÚSCULAS_CON_GUIONES.
+•	Identificar todos los métodos async ejemplo: GetPaymentsByProductIdAsync(id); 
+Programación asíncrona:
+•	Los métodos que realizan operaciones de I/O (consultas a base de datos, llamadas a APIs externas, lectura/escritura de archivos) deben implementarse como async y utilizar await para mejorar la eficiencia y evitar bloqueos.
+•	Se debe evitar el uso de operaciones síncronas que puedan bloquear el hilo principal.
+Validaciones: 
+Se expresan con códigos (00, 01, 99) y se traducen a mensajes por el ValidationService.
+Ejemplo:
+01	El monto del pago debe ser mayor a cero
+99	Errores no controlados del sistema
+00	Operación exitosa
+
+Responses: 
+Todas las APIs devuelven GeneralResponse con estructura uniforme: status, hasError, messages, data. Esto asegura consistencia entre servicios.
+Documentación de API: 
+Todas las API REST deben documentarse en ambientes de desarrollo y pruebas con Swagger/OpenAPI. Esto permite a los desarrolladores interactuar fácilmente con los servicios. Es importante aclarar que en producción debe estar deshabilitado. 
+Manejo de errores: 
+Todas las excepciones deben ser capturadas y transformadas en respuestas controladas con códigos definidos.
+Logging y trazabilidad:
+Cada request debe generar logs con un correlationId para rastrear la transacción en todo el flujo. Los errores deben registrarse con nivel Error y las operaciones exitosas con nivel Info.
+Versionado de APIs:
+Cada servicio debe exponer su versión en la URL (ej. /api/v1/payments). Esto permite evolucionar sin romper integraciones existentes.
+Pruebas automatizadas:
+Cada servicio debe contar con pruebas unitarias para la lógica de negocio y pruebas de integración para los endpoints, para este punto es importante seguir el Flujo del Proceso de Pruebas. 
+Consistencia en respuestas:
+Los mensajes de validación y error deben estar centralizados en un catálogo para evitar duplicidad y mantener coherencia.
+
+Buenas prácticas 
+No usar excepciones para reglas de negocio: se devuelven respuestas controladas con códigos de validación.
+Centralizar mensajes: ValidationService gestiona códigos y descripciones, evitando duplicación.
+Constantes solo para valores fijos: no mezclar lógica dinámica en clases de constantes.
+Separación de responsabilidades: cada capa cumple un rol específico.
+Documentación continua: mantener actualizado el contrato de APIs con Swagger.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Enfoque en Microservicios 
+La arquitectura de microservicios es un estilo de diseño que divide una aplicación en servicios pequeños, independientes y especializados, que se comunican entre sí a través de APIs. Cada servicio se desarrolla, despliega y escala de manera autónoma, lo que permite mayor flexibilidad, resiliencia y velocidad en el desarrollo.
+
+El proyecto de migración al procesador regional de tarjetas de créditoes un proyecto estratégico que requiere la participación y coordinación de múltiples equipos y áreas interesadas. Debido a su complejidad, alcance y necesidades de integración con diversos sistemas, la propuesta de arquitectura más adecuada y aceptada para este caso es la arquitectura de microservicios.
+Este enfoque ofrece ventajas clave:
+•	Escalabilidad: cada servicio puede crecer de forma independiente según la demanda (ej. procesamiento de pagos en temporadas altas).
+•	Flexibilidad tecnológica: permite integrar distintos cores de tarjetas y adaptarse a nuevas reglas de negocio sin afectar el sistema completo.
+•	Resiliencia: un fallo en un servicio no compromete la operación total, garantizando continuidad en el procesamiento.
+•	Agilidad en el desarrollo: equipos especializados pueden trabajar en paralelo sobre servicios específicos, acelerando la entrega de valor.
+
+Microservicios
+Cada microservicio debe encapsular su propia lógica de negocio, datos y dependencias. La independencia asegura que pueda desarrollarse, desplegarse, escalarse y mantenerse sin afectar a otros servicios.
+Ejemplo: 
+•	Microservicio de Api Gateway 
+•	Microservicios de Saldos
+•	Microservicio de Extrafinanciamiento
+•	Microservicio de Flotantes
+Base de datos
+Debemos segmentar las bases de datos de forma que facilite la independencia de cada servicio y que a su vez no genere problemas adicionales. 
+Ejemplo: Crear una base de datos para el microservicio de pagos en cuotas. 
+Es posible tener diferentes servidores de bases de datos, principalmente los siguientes: 
+•	SQL Server
+•	DB2
+Despliegue en Openshift
+El despliegue de los microservicios se realizará en OpenShift, aprovechando su capacidad de orquestación, escalabilidad y gestión de contenedores. La estructura será la siguiente:
+Imágenes Docker: Cada microservicio se empaquetará en una imagen Docker que incluye todas sus dependencias. Esto garantiza portabilidad y ejecución consistente en cualquier entorno.
+Pods: Al desplegarse en OpenShift, cada microservicio se ejecutará dentro de un pod, la unidad básica de ejecución en OpenShift. En nuestro caso, se utilizará un pod por microservicio para mantener independencia y simplicidad.
+Namespaces: Los microservicios estarán organizados en namespaces separados según el ambiente (desarrollo, pruebas, producción). Esto permite aislamiento, control de recursos y una gestión más ordenada.
+Services: OpenShift creará un objeto Service para cada microservicio. Este objeto expone el microservicio dentro del clúster y permite que otros servicios se comuniquen con él mediante un nombre DNS interno, asegurando descubrimiento y conectividad estable.
+Routes: (exposición externa): Para habilitar el acceso desde clientes externos, OpenShift definirá Routes que exponen los microservicios fuera del clúster mediante una URL pública. Esto facilita la integración con aplicaciones externas y usuarios finales.
+ 
+Escalabilidad
+La arquitectura de microservicios se implementará para ser altamente escalable, aprovechando las capacidades nativas de OpenShift:
+Réplicas de microservicios: Cada microservicio podrá ejecutarse en múltiples réplicas (pods) para garantizar disponibilidad y distribuir la carga de trabajo. Esto asegura que el sistema continúe funcionando incluso si un pod falla.
+Autoscaling dinámico: Se configurarán reglas de Horizontal Pod Autoscaler (HPA) en OpenShift, que ajustan automáticamente el número de pods según métricas de uso (CPU, memoria, tráfico).  Ejemplo: Si el servicio de pagos recibe un alto volumen de transacciones, OpenShift incrementará las réplicas; cuando la demanda disminuya, reducirá la cantidad de pods.
+Escalabilidad granular: Cada microservicio se escala de manera independiente, evitando el sobrecosto de escalar toda la aplicación. Esto permite optimizar recursos y costos.
+Alta disponibilidad: Al distribuir réplicas en distintos nodos del clúster, se garantiza tolerancia a fallos y continuidad del servicio.
+Balanceo de carga automático: OpenShift distribuye las solicitudes entre las réplicas disponibles mediante el objeto Service, asegurando un rendimiento uniforme.
+Configuración
+La configuración de los microservicios se gestionará mediante variables de entorno, ConfigMaps y Secrets, lo que permite parametrizar credenciales, endpoints y otros valores sin modificar el código ni reconstruir las imágenes. 
+Variables de entorno: Se definen en los manifiestos de despliegue o en la consola de OpenShift. Permiten pasar parámetros simples (ej. URL de un servicio, límites de memoria) directamente al contenedor. 
+ConfigMaps: Son objetos de OpenShift que almacenan datos de configuración no sensibles (ej. endpoints, nombres de servicios, parámetros de negocio). Separan la configuración del código, manteniendo las imágenes portables y reutilizables.  Ejemplo: un ConfigMap puede contener la URL del procesador regional de tarjetas o reglas de validación.
+Secrets: Son objetos diseñados para almacenar información sensible como credenciales, tokens o certificados.
+Se inyectan en los pods de manera segura, evitando exponer datos en el código o repositorios.
+OpenShift cifra los Secrets y controla su acceso mediante políticas de seguridad. Ejemplo: credenciales de conexión a la base de datos o claves de autenticación de APIs externas.
+Monitoreo
+El monitoreo es un componente esencial para garantizar la observabilidad y la trazabilidad de los microservicios desplegados en OpenShift. La plataforma ofrece herramientas integradas que permiten recopilar métricas y logs de forma centralizada, facilitando la detección temprana de errores y el análisis de rendimiento.
+Métricas: OpenShift recolecta información de cada pod y microservicio, almacenándola en sistemas de monitoreo y logging centralizados. Esto permite tener una visión completa del estado del clúster y de cada aplicación.
+Trazabilidad: Los logs incluyen identificadores de correlación (correlationId) que permiten seguir el recorrido de una solicitud a través de múltiples microservicios, lo que facilita el diagnóstico de problemas en sistemas distribuidos.
+Alertas: Se configuran reglas de monitoreo que generan alertas automáticas cuando se detectan anomalías (ej. alto consumo de CPU, fallos recurrentes, errores en endpoints). Estas alertas pueden integrarse con sistemas externos como Slack, correo electrónico o herramientas de gestión de incidentes.
+Visualización: OpenShift se integra con Prometheus y Grafana, permitiendo visualizar métricas en tiempo real (uso de recursos, latencia de APIs, número de peticiones) mediante dashboards personalizados.
+Seguridad
+La seguridad es un aspecto crítico en la arquitectura de microservicios. OpenShift proporciona mecanismos integrados que permiten proteger tanto la infraestructura como las aplicaciones desplegadas. Los principales puntos para considerar son:
+Aislamiento por namespaces: cada microservicio se despliega en un namespace específico, lo que permite separar ambientes (dev, test, prod) y aplicar políticas de seguridad diferenciadas.
+Autenticación y autorización de APIs: los microservicios deben implementar mecanismos de autenticación (ejemplo: OAuth2, JWT) para validar la identidad de los clientes que consumen sus APIs.
+OpenShift puede integrarse con proveedores de identidad corporativos (LDAP, Active Directory, Keycloak) para centralizar la gestión de credenciales.
+Secrets para credenciales sensibles: información crítica como contraseñas, tokens y certificados se almacena en objetos Secrets, cifrados y gestionados por OpenShift. Esto evita exponer datos sensibles en el código o en los repositorios.
+Políticas de red (Network Policies): se definen reglas de comunicación entre pods y servicios, limitando el tráfico únicamente a lo necesario. Esto reduce la superficie de ataque y evita accesos no autorizados.
+Auditoría y logging de seguridad: todas las acciones dentro del clúster se registran, permitiendo auditorías y trazabilidad de accesos y cambios. Esto es clave para cumplir normativas y detectar incidentes.
+CORS (Cross-Origin Resource Sharing) policy: es un mecanismo de seguridad basado en cabeceras HTTP que permite a los servidores controlar qué dominios externos pueden acceder a sus recursos. 
+En el contexto de los microservicios de TC se integrará una política basada en CORS, definiendo las URL de las aplicaciones cliente que harán uso de ellos. 
+Rate Limit: control que restringe la cantidad de solicitudes que un cliente puede realizar a un servidor en un periodo de tiempo definido.
+Estrategia de Pruebas
+La finalidad de estas pruebas es asegurar que cada microservicio creado cumpla con los requisitos funcionales y de rendimiento antes de ser entregado. Las pruebas deben realizarse durante el desarrollo y mantenerse como parte del ciclo de vida del desarrollo. 
+Tipos de Pruebas 
+Pruebas unitarias: La finalidad de estas pruebas es confirmar que la lógica de negocio funciona correctamente sin depender de otros componentes. Estas pruebas validan métodos y funciones individuales de forma aislada. En este documento proponemos el uso de proyectos de xUnit para hacer pruebas unitarias y para validar reglas de negocio.
+Ejemplos de pruebas unitarias: 
+•	Probar que GeneralResponseFn.responseGeneral() construye correctamente el objeto de respuesta. 
+•	Validar que un método de validación devuelve el código de error esperado. 
+
+Como una buena práctica proponemos una cobertura mínima del 80% de los métodos y funciones y cada método público debe tener al menos una prueba positiva y una negativa. 
+
+ 
+
+Ejemplo: Prueba unitaria para validar que el método CreatePaymentAsync() devuelve un código 01 que corresponde a la validación cuando el monto es negativo o 0. 
+
+Pruebas de integración: Estas pruebas deben hacerse para confirmar que los microservicios funcionan correctamente cuando se conectan a sus dependencias reales o simuladas como validar que las consultas y procedimientos almacenados funcionan como se espera.
+Ejemplos de pruebas de integración: 
+•	Validar que ProductService.Update() actualiza correctamente un registro existente. 
+•	Probar que PaymentsServiceImpl.Create() inserta un pago en la base de datos.
+Para estas pruebas nos podemos apoyar también en herramientas como xUnit, SqlServer.
+Pruebas de Rendimiento: Las pruebas de rendimiento se enfocan en validar tiempos de respuesta y comportamiento bajo carga para garantizar que los microservicios soporten el volumen esperado de peticiones sin degradar su desempeño. Es importante tener una estrategia de pruebas que nos permita hacer una comparación del rendimiento de los microservicios. 
+ 
+Ejemplo:
+•	Simular 1000 peticiones concurrentes a GET  api/Payments y medir la latencia. 
+•	Validar que GET /products responde en menos de 200 ms con 1000 registros. 
+Podemos optimizar el rendimiento teniendo métricas con datos reales, podemos implementar el uso de Apache JMeter.  
+Proceso de Pruebas
+El objetivo de estas pruebas es garantizar que cada servicio desarrollado cumple con las reglas de negocio definidas en los requerimientos y que ha pasado por pruebas unitarias y de integración automatizadas, para evitar reprocesos. 
+Flujo del proceso de Pruebas
+1.	Desarrollo del servicio
+•	El Oficial de Innovación implementa el servicio en la capa correspondiente.
+2.	Creación de pruebas unitarias
+•	Se escriben pruebas en el proyecto xUnit.Tests.
+•	Cada regla de negocio debe tener al menos una prueba.
+3.	Ejecución de pruebas
+•	Se ejecutan todos los tests en la solución.
+•	Todas las pruebas deben pasar.
+4.	Pruebas de integración con BD de pruebas
+•	Se ejecutan pruebas que usan DBHelper contra una base de datos de pruebas.
+•	Se valida que los registros se inserten, actualicen o eliminen correctamente.
+5.	Generación de reporte de pruebas
+•	Se guarda el resultado de dotnet test en un archivo (ej. TestResults.xml).
+Ejemplo de pruebas unitarias:
+ 
+Prueba	Escenario validado	Pasó	Retorna 
+Crear_DeberiaRetornar01_CuandoMontoEsCeroONegativo	Pago con monto 0 o negativo	 Si	01
+Crear_DeberiaRetornar02_CuandoProductoYaTieneDosPagos	Producto con 2 pagos previos	 Si	02
+CrearPagoValido_DeberiaGuardarEnBD_YRetornar00	Pago válido insertado en BD	 Si	00 
+
+
+
+
+
+
+Ayudame a seguir estos estandares. 
+
+
+
+
+Por cierto en el proyecto, en DTOS hay una carpeta que se llama response y tiene esto:
+namespace transacciones_flotantes.DTOs.Response
+{
+    public class GeneralResponse
+    {
+        public int Status { get; set; }
+        public bool HasError { get; set; }
+        public List<Messages> Messages { get; set; } = new List<Messages>();
+        public object? Data { get; set; }
+    }
+
+    public class Messages
+    {
+        public string? Code { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
+}
