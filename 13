@@ -1,0 +1,73 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using System.Text.Json;
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.MapPost("/token", async (HttpContext context) =>
+{
+    var response = new
+    {
+        access_token = Guid.NewGuid().ToString("N"),
+        expires_in = 2000,
+        token_type = "Bearer"
+    };
+
+    context.Response.ContentType = "application/json";
+    await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+});
+
+app.Run("https://localhost:5001");
+
+
+
+
+
+
+
+
+
+
+----------
+
+
+
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using System.Text.Json;
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.MapPost("/transacciones", async (HttpContext context) =>
+{
+    var response = new
+    {
+        total_floating = new
+        {
+            total_HNL = 0,
+            total_USD = 0
+        },
+        authorizations = new[]
+        {
+            new {
+                transaction_type = "COMPRAS",
+                date = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                currency = "HNL",
+                amount = 300.0,
+                merchant_name = "WALMART BOULEVARD DEL NOR",
+                reference = "123456",
+                movement_type = "C"
+            }
+        }
+    };
+
+    context.Response.ContentType = "application/json";
+    await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+});
+
+app.Run("https://localhost:5002");
+
+
