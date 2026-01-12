@@ -1,0 +1,49 @@
+using System.Data;
+using Microsoft.Data.SqlClient;
+using Dapper;
+using transacciones_flotantes.Models.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+
+
+namespace transacciones_flotantes.Repository
+{
+    public class TransaccionFlotanteRepository : ITransaccionFlotanteRepository
+    {
+        private readonly IConfiguration _configuration;
+
+        public TransaccionFlotanteRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<TransaccionFlotanteProveedorDataModel?>
+            ObtenerDatosProveedorAsync(string counterpartCard)
+        {
+            using var connection =
+                new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+            return await connection.QueryFirstOrDefaultAsync<
+                TransaccionFlotanteProveedorDataModel>(
+                "sp_ObtenerDatosTransaccionFlotante",
+                new { CounterpartCard = counterpartCard },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+    }
+}
+
+
+
+
+
+
+El nombre del tipo o del espacio de nombres 'ITarjetasRepository' no se encontró (¿falta una directiva using o una referencia de ensamblado?)
+'TransaccionFlotanteProveedorDataModel' no contiene una definición para 'BinTarjeta'
+'TransaccionFlotanteProveedorDataModel' no contiene una definición para 'NoDocumento'
+El nombre del tipo o del espacio de nombres 'Dapper' no se encontró (¿falta una directiva using o una referencia de ensamblado?)
+"SqlConnection" no contiene una definición para "QueryFirstOrDefaultAsync" ni un método de extensión accesible "QueryFirstOrDefaultAsync" que acepte un primer argumento del tipo "SqlConnection" (¿falta alguna directiva using o una referencia de ensamblado?)
+El proyecto "..\transacciones_flotantes\transacciones_flotantes.csproj" tiene "net10.0" como destino. No puede hacer referencia a este un proyecto con ".NETCoreApp,Version=v8.0" como destino.
+El proyecto transacciones_flotantes no es compatible con net8.0 (.NETCoreApp,Version=v8.0). El proyecto transacciones_flotantes admite: net10.0 (.NETCoreApp,Version=v10.0)
+
+
+
