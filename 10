@@ -1,53 +1,49 @@
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repositories.Interfaces;
 using transacciones_flotantes.Services.Interfaces;
 
 namespace transacciones_flotantes.Services.Services
 {
-    public class ProveedorApiClient : IProveedorApiClient
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
     {
-        private readonly HttpClient _httpClient;
-        private readonly IProveedorTokenService _tokenService;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<ProveedorApiClient> _logger;
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ILogger<TransaccionesFlotantesService> _logger;
 
-        public ProveedorApiClient(
-            HttpClient httpClient,
-            IProveedorTokenService tokenService,
-            IConfiguration configuration,
-            ILogger<ProveedorApiClient> logger)
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ILogger<TransaccionesFlotantesService> logger)
         {
-            _httpClient = httpClient;
-            _tokenService = tokenService;
-            _configuration = configuration;
+            _repository = repository;
+            _proveedorClient = proveedorClient;
             _logger = logger;
         }
 
-        public async Task<string> EnviarTransaccionAsync(ProveedorTransaccionFlotanteRequestDto request)
+        public async Task<string> ProcesarAsync(TransaccionesFlotantesRequestDto request)
         {
-            var token = await _tokenService.ObtenerAccessTokenAsync();
+            var data = await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
 
-            var httpRequest = new HttpRequestMessage(
-                HttpMethod.Post,
-                _configuration["Proveedor:TransaccionesUrl"]);
+            if (data == null)
+                throw new Exception("Tarjeta no encontrada");
 
-            httpRequest.Headers.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
+            var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+            {
+                Card = new()
+                {
+                    Bin = data.Bin,
+                    UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                },
+                Client = new()
+                {
+                    NumeroDocumento = data.NumeroDocumento,
+                    TipoDocumento = data.TipoDocumento,
+                    Sexo = data.Sexo
+                }
+            };
 
-            httpRequest.Content = new StringContent(
-                JsonSerializer.Serialize(request),
-                Encoding.UTF8,
-                "application/json");
-
-            _logger.LogInformation("Enviando request al proveedor externo...");
-
-            var response = await _httpClient.SendAsync(httpRequest);
-            response.EnsureSuccessStatusCode();
-
-            return await response.Content.ReadAsStringAsync();
+            return await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
         }
     }
 }
