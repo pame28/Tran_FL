@@ -1,0 +1,53 @@
+Creo que aqui viene mi problema
+
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+using transacciones_flotantes.Utils;
+
+namespace transacciones_flotantes.Service
+{
+    public class ValidationServiceImp : IValidationService
+    {
+        private readonly IParametrosRepository _validationsRepository;
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+
+        public ValidationServiceImp(ICatalogoErroresRepository catalogoErrores, IParametrosRepository validationsRepository)
+        {
+            _catalogoErrores = catalogoErrores;
+            _validationsRepository = validationsRepository;
+        }
+
+        public async Task<string> getMensajeValidacion(string clave)
+        {
+            var validation = await _validationsRepository.GetByCode(clave);
+            return string.Format(Constantes.MENSAJE_VALIDACION, validation.valor);
+        }
+
+
+        public async Task<GeneralResponse> CrearRespuestaAsync(
+           string codigoError,
+           object? data = null)
+        {
+            var descripcion =
+                await _catalogoErrores.ObtenerDescripcionAsync(codigoError);
+
+            return new GeneralResponse
+            {
+                Status = codigoError == "00" ? 200 : 400,
+                HasError = codigoError != "00",
+                Data = data,
+                Messages =
+                {
+                    new Messages
+                    {
+                        Code = codigoError,
+                        Description = descripcion
+                    }
+                }
+            };
+        }
+
+
+        }
+}
