@@ -1,0 +1,237 @@
+CREATE TABLE CatalogoErrores (
+    CodigoError VARCHAR(10) NOT NULL PRIMARY KEY,
+    Descripcion NVARCHAR(255) NOT NULL
+);
+
+
+
+
+
+
+----------
+
+
+
+INSERT INTO CatalogoErrores (CodigoError, Descripcion) VALUES
+('00', 'Operación exitosa'),
+('01', 'Parámetros inválidos'),
+('02', 'Tarjeta no encontrada'),
+('03', 'Error al consultar base de datos'),
+('04', 'Error al obtener token del proveedor'),
+('05', 'Error al consumir API del proveedor'),
+('06', 'Token expirado o inválido'),
+('99', 'Error no controlado del sistema');
+
+
+
+
+-----------
+
+
+namespace transacciones_flotantes.Repositories.Interfaces
+{
+    public interface ICatalogoErroresRepository
+    {
+        Task<string> ObtenerDescripcionAsync(string codigoError);
+    }
+}
+
+
+
+
+
+------------
+
+
+using Dapper;
+using System.Data;
+using System.Data.SqlClient;
+using transacciones_flotantes.Repositories.Interfaces;
+
+namespace transacciones_flotantes.Repositories.Repositories
+{
+    public class CatalogoErroresRepository : ICatalogoErroresRepository
+    {
+        private readonly IConfiguration _configuration;
+
+        public CatalogoErroresRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<string> ObtenerDescripcionAsync(string codigoError)
+        {
+            using var connection =
+                new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+            var sql = @"SELECT Descripcion 
+                        FROM CatalogoErrores 
+                        WHERE CodigoError = @CodigoError";
+
+            return await connection.QueryFirstOrDefaultAsync<string>(
+                sql,
+                new { CodigoError = codigoError }
+            ) ?? "Descripción no encontrada";
+        }
+    }
+}
+
+
+
+
+
+
+--------
+
+
+
+using transacciones_flotantes.DTOs.Response;
+
+namespace transacciones_flotantes.Services.Interfaces
+{
+    public interface IValidationService
+    {
+        Task<GeneralResponse> CrearRespuestaAsync(
+            string codigoError,
+            object? data = null);
+    }
+}
+
+
+
+
+
+
+--------
+
+
+
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.Repositories.Interfaces;
+using transacciones_flotantes.Services.Interfaces;
+
+namespace transacciones_flotantes.Services.Services
+{
+    public class ValidationService : IValidationService
+    {
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+
+        public ValidationService(ICatalogoErroresRepository catalogoErrores)
+        {
+            _catalogoErrores = catalogoErrores;
+        }
+
+        public async Task<GeneralResponse> CrearRespuestaAsync(
+            string codigoError,
+            object? data = null)
+        {
+            var descripcion =
+                await _catalogoErrores.ObtenerDescripcionAsync(codigoError);
+
+            return new GeneralResponse
+            {
+                Status = codigoError == "00" ? 200 : 400,
+                HasError = codigoError != "00",
+                Data = data,
+                Messages =
+                {
+                    new Messages
+                    {
+                        Code = codigoError,
+                        Description = descripcion
+                    }
+                }
+            };
+        }
+    }
+}
+
+
+
+
+
+
+
+
+---------------
+
+
+
+
+
+public async Task<GeneralResponse> ProcesarAsync(
+    TransaccionesFlotantesRequestDto request)
+{
+    try
+    {
+        var data =
+            await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+        if (data == null)
+            return await _validationService.CrearRespuestaAsync("02");
+
+        var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+        {
+            Card = new()
+            {
+                Bin = data.Bin,
+                UltimosCuatroDigitos = data.UltimosCuatroDigitos
+            },
+            Client = new()
+            {
+                NumeroDocumento = data.NumeroDocumento,
+                TipoDocumento = data.TipoDocumento,
+                Sexo = data.Sexo
+            }
+        };
+
+        var responseProveedor =
+            await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+
+        return await _validationService.CrearRespuestaAsync(
+            "00",
+            JsonSerializer.Deserialize<object>(responseProveedor)
+        );
+    }
+    catch (HttpRequestException ex)
+    {
+        _logger.LogError(ex, "Error al consumir proveedor");
+        return await _validationService.CrearRespuestaAsync("05");
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error no controlado");
+        return await _validationService.CrearRespuestaAsync("99");
+    }
+}
+
+
+
+
+
+
+-----------
+
+
+
+
+
+[HttpPost]
+public async Task<IActionResult> Procesar(
+    [FromBody] TransaccionesFlotantesRequestDto request)
+{
+    var response = await _service.ProcesarAsync(request);
+    return StatusCode(response.Status, response);
+}
+
+
+
+
+-----------
+
+
+
+builder.Services.AddScoped<ICatalogoErroresRepository, CatalogoErroresRepository>();
+builder.Services.AddScoped<IValidationService, ValidationService>();
+
+
