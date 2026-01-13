@@ -1,0 +1,322 @@
+Revisa mis archivos, no se cual es el problema
+
+
+namespace transacciones_flotantes.DTOs.Response
+{
+    public class GeneralResponse
+    {
+        public int Status { get; set; }
+        public bool HasError { get; set; }
+        public List<Messages> Messages { get; set; } = new();
+        public object? Data { get; set; }
+    }
+
+    public class Messages
+    {
+        public string? Code { get; set; }
+        public string Description { get; set; } = string.Empty;
+    }
+}
+
+
+
+
+
+--------------------------------------------------------------
+
+
+namespace transacciones_flotantes.Models.Validations
+{
+    public class Parametros
+    {
+        public string clave { get; set; } = string.Empty;
+        public object? valor { get; set; }
+    }
+}
+
+
+
+----------------------------------------------------------
+
+
+
+
+using System.Data;
+using Microsoft.Data.SqlClient;
+using Dapper;
+using transacciones_flotantes.Models.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+
+
+namespace transacciones_flotantes.Repository
+{
+    public class TransaccionFlotanteRepository : ITransaccionFlotanteRepository
+    {
+        private readonly IConfiguration _configuration;
+
+        public TransaccionFlotanteRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<TransaccionFlotanteProveedorDataModel?>
+            ObtenerDatosProveedorAsync(string counterpartCard)
+        {
+            using var connection =
+                new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+            return await connection.QueryFirstOrDefaultAsync<
+                TransaccionFlotanteProveedorDataModel>(
+                "sp_ObtenerDatosTransaccionFlotante",
+                new { CounterpartCard = counterpartCard },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+    }
+}
+
+
+
+
+-------------------------------------------------------------------------------
+
+
+
+using transacciones_flotantes.Infrastructure.Data;
+using transacciones_flotantes.Models.Validations;
+using transacciones_flotantes.Repository.Interface;
+
+namespace transacciones_flotantes.Repository
+{
+    public class ParametrosRepositoryImp : IParametrosRepository
+    {
+        private readonly DBHelper _dbHelper;
+        public ParametrosRepositoryImp(DBHelper dbHelper)
+        {
+            _dbHelper = dbHelper;
+        }
+
+        public async Task<Parametros> GetByCode(string clave)
+        {
+            try
+            {
+                using var reader = await _dbHelper.ExecuteReaderAsync("getParametroByClave",
+                    new Dictionary<string, object> { { "@Clave", clave } });
+
+                while (await reader.ReadAsync())
+                {
+                    return new Parametros
+                    {
+                        clave = reader.GetString(0),
+                        valor = reader.GetString(1)
+                    };  
+                }
+                return new Parametros();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"{ex.Message}");
+            }
+        }
+    }
+}
+
+
+
+
+-------------------------------------------------------------------------
+
+
+
+
+using Dapper;
+using Microsoft.Data.SqlClient;
+using transacciones_flotantes.Repository.Interface;
+
+namespace transacciones_flotantes.Repository
+{
+    public class CatalogoErroresRepository : ICatalogoErroresRepository
+    {
+        private readonly IConfiguration _configuration;
+
+        public CatalogoErroresRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<string> ObtenerDescripcionAsync(string codigoError)
+        {
+            using var connection =
+                new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+            var sql = @"SELECT Descripcion 
+                        FROM CatalogoErrores 
+                        WHERE CodigoError = @CodigoError";
+
+            return await connection.QueryFirstOrDefaultAsync<string>(
+                sql,
+                new { CodigoError = codigoError }
+            ) ?? "Descripción no encontrada";
+        }
+    }
+
+}
+
+
+
+
+---------------------------------------------------------
+
+
+using System.Text.Json;
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Service
+{
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+    {
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ILogger<TransaccionesFlotantesService> _logger;
+        private readonly IValidationService _validationService;
+
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ILogger<TransaccionesFlotantesService> logger)
+        {
+            _repository = repository;
+            _proveedorClient = proveedorClient;
+            _logger = logger;
+        }
+
+        public async Task<GeneralResponse> ProcesarAsync(
+      TransaccionesFlotantesRequestDto request)
+        {
+            try
+            {
+                var data =
+                    await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+                if (data == null)
+                    return await _validationService.CrearRespuestaAsync("02");
+
+                var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+                {
+                    Card = new()
+                    {
+                        Bin = data.Bin,
+                        UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                    },
+                    Client = new()
+                    {
+                        NumeroDocumento = data.NumeroDocumento,
+                        TipoDocumento = data.TipoDocumento,
+                        Sexo = data.Sexo
+                    }
+                };
+
+                var responseProveedor =
+                    await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+
+                return await _validationService.CrearRespuestaAsync(
+                    "00",
+                    JsonSerializer.Deserialize<object>(responseProveedor)
+                );
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Error al consumir proveedor");
+                return await _validationService.CrearRespuestaAsync("05");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error no controlado");
+                return await _validationService.CrearRespuestaAsync("99");
+            }
+        }
+    }
+    }
+
+
+
+--------------------------------------------------------------------
+
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+using transacciones_flotantes.Utils;
+
+namespace transacciones_flotantes.Service
+{
+    public class ValidationServiceImp : IValidationService
+    {
+        private readonly IParametrosRepository _validationsRepository;
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+
+        public ValidationServiceImp(ICatalogoErroresRepository catalogoErrores, IParametrosRepository validationsRepository)
+        {
+            _catalogoErrores = catalogoErrores;
+            _validationsRepository = validationsRepository;
+        }
+
+        public async Task<string> getMensajeValidacion(string clave)
+        {
+            var validation = await _validationsRepository.GetByCode(clave);
+            return string.Format(Constantes.MENSAJE_VALIDACION, validation.valor);
+        }
+
+
+        public async Task<GeneralResponse> CrearRespuestaAsync(
+           string codigoError,
+           object? data = null)
+        {
+            var descripcion =
+                await _catalogoErrores.ObtenerDescripcionAsync(codigoError);
+
+            return new GeneralResponse
+            {
+                Status = codigoError == "00" ? 200 : 400,
+                HasError = codigoError != "00",
+                Data = data,
+                Messages =
+                {
+                    new Messages
+                    {
+                        Code = codigoError,
+                        Description = descripcion
+                    }
+                }
+            };
+        }
+
+
+        }
+}
+
+
+
+-----------------------------------------------------------------
+
+
+builder.Services.AddScoped<ICatalogoErroresRepository, CatalogoErroresRepository>();
+builder.Services.AddScoped<IParametrosRepository, ParametrosRepositoryImp>();
+builder.Services.AddScoped<IValidationService, ValidationServiceImp>();
+builder.Services.AddScoped<DBHelper>();
+
+builder.Services.AddScoped<ITransaccionFlotanteRepository,
+    TransaccionFlotanteRepository>();
+
+builder.Services.AddScoped<ITransaccionesFlotantesService,
+    TransaccionesFlotantesService>();
+
+builder.Services.AddHttpClient<IProveedorTokenService,
+    ProveedorTokenService>();
+
+builder.Services.AddHttpClient<IProveedorApiClient,
+    ProveedorApiClient>();
+
+builder.Services.AddHttpClient();
