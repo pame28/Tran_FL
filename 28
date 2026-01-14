@@ -1,3 +1,11 @@
+
+No se puede convertir implícitamente el tipo 'int' en 'System.Collections.Generic.List<transacciones_flotantes.DTOs.Response.ResponseDto.LegacyAutorizacionDto>'
+
+
+
+
+
+
 using System.Text.Json;
 using transacciones_flotantes.DTOs.Response;
 using transacciones_flotantes.DTOs.TransaccionesFlotantes;
