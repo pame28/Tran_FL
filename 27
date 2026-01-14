@@ -1,0 +1,56 @@
+
+
+
+
+Ok, mira ahora hay que realizar algunas modificaciones ya que, la estructura a la que ahora debo apegarme es otra:
+a esta
+
+{
+  "result": {
+    "codigo": 1,
+    "descripcion": "True"
+  },
+  "respuesta": [
+    {
+      "date": "2026-01-13T10:03:17-06:00",
+      "merchant_name": "GOOGLE*CLASH OF CLANS",
+      "amount": 1.63,
+      "currency": "U$S",
+      "reference": null
+    }
+  ]
+}
+
+y en error se ve asi:
+
+
+{
+  "result": {
+    "codigo": 2,
+    "descripcion": "No se encontraron registros"
+  },
+  "respuesta": 0
+}
+
+
+
+
+
+------
+
+{
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "counterpart_card": [
+      "El numero de tarjeta es obligatorio"
+    ]
+  },
+  "traceId": "00-8c694e19cf24f504108102803e70a1d0-df397de8ec7001ba-00"
+}
+
+
+
+
+Ayudame a realizar los cambios correspondientes
