@@ -1,0 +1,122 @@
+Mira, hay dos cosas que necesito que realices:
+
+La primera es que me gustaria que mi catalogo de errores se vieras más o menos asi, en cuanto a la estructura... que consume un Stored Procedure:
+
+       public CatalogoResponse GetCatalogoResponse(int cod)
+       {
+           CatalogoResponse catalogoResponse = new CatalogoResponse();
+           
+           try
+           {
+               var response = _bd.catalogoResponse.FromSqlRaw("EXEC SP_GetCatalogoResponse @error_code={0}", cod).ToList();
+               catalogoResponse = response[0];
+			_logger.Info($"Respuesta del catalogo cod:{cod} - {catalogoResponse.Descripcion}");
+		}
+           catch (Exception ex)
+           {
+               //setLog("GetCatalogoResponse", cod.ToString(), ex.ToString());
+               _logger.Error("Error al obtener los datos del error", ex);
+           }
+           return catalogoResponse;
+       }
+
+
+  Ayudame desde la creación hasta los cambios pertinentes... la otra cosa es que yo necesito:
+
+  Es que, tenga una estructura asi cuando hay un error:
+
+  {
+  "result": {
+    "codigo": 2,
+    "descripcion": "No se encontraron registros"
+  },
+  "respuesta": 0
+}
+
+
+
+---------------------
+
+Asi cuando está bien (Lo que estoy haciendo es basandome de otra API, porque es una migracion lo que estoy haciendo y debe responder igual)
+
+{
+  "result": {
+    "codigo": 1,
+    "descripcion": "True"
+  },
+  "total_floating": {
+    "total_HNL": "0",
+    "total_USD": "-1.63"
+  },
+  "respuesta": [
+    {
+      "date": "2026-01-13T10:03:17-06:00",
+      "merchant_name": "GOOGLE*CLASH OF CLANS",
+      "amount": 1.63,
+      "currency": "USD",
+      "reference": null,
+      "transaction_type": "CON U$S"
+    }
+  ]
+}
+
+
+
+
+Actualmente mi microservicio me responde asi:
+
+
+{
+  "status": 200,
+  "hasError": false,
+  "messages": [
+    {
+      "code": "00",
+      "description": "Operación exitosa"
+    }
+  ],
+  "data": {
+    "total_floating": {
+      "total_HNL": 0,
+      "total_USD": 0
+    },
+    "authorizations": [
+      {
+        "transaction_type": "COMPRAS",
+        "date": "2026-01-14T14:20",
+        "currency": "HNL",
+        "amount": 300,
+        "merchant_name": "WALMART BOULEVARD DEL NOR",
+        "reference": "123456",
+        "movement_type": "C"
+      }
+    ]
+  }
+}
+
+
+
+
+Y este es el response de mi proveedor (r4ecuerda que actualmente estoy usando un simulador):
+{
+"total_floating": {
+ "total_HNL": 0,
+ "total_USD": 0
+ },
+ "authorizations": [ -> Listado de transacciones
+ {
+ "transaction_type": "COMPRAS", -> Tipo de transaccion: compra, adelanto, pago, etc.
+ "date": "2025-05-27T22:03:44+0000", -> Fecha de transaccion
+ "currency": "HNL", -> Moneda en formato ISO4217 ejemplo: HNL, USD
+ "amount": 300.00, -> Monto de la transaccion
+ "merchant_name": "WALMART BOULEVARD DEL NOR", -> Nombre del comercio donde se 
+realizó la transaccion
+ "reference":"" -> Numero de secuencia de la transaccion
+ "movement_type":"" -> Tipo de movimiento: C = Crédito, D= Débito
+ }
+ ]
+}
+
+
+
+Ayudame a realizar las actualizaciones correspondientes, bridname archivos completos y con buenas practicas
