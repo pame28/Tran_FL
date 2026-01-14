@@ -1,0 +1,320 @@
+public class CatalogoErroresRepository : ICatalogoErroresRepository
+{
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<CatalogoErroresRepository> _logger;
+
+    public CatalogoErroresRepository(
+        IConfiguration configuration,
+        ILogger<CatalogoErroresRepository> logger)
+    {
+        _configuration = configuration;
+        _logger = logger;
+    }
+
+    public async Task<CatalogoResponse> GetCatalogoResponseAsync(int codigo)
+    {
+        _logger.LogInformation("Consultando catálogo de errores. Código: {Codigo}", codigo);
+
+        try
+        {
+            using var connection =
+                new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+            var result = await connection.QueryFirstOrDefaultAsync<CatalogoResponse>(
+                "SP_GetCatalogoResponse",
+                new { error_code = codigo },
+                commandType: CommandType.StoredProcedure);
+
+            if (result == null)
+            {
+                _logger.LogWarning(
+                    "Código de error {Codigo} no existe en catálogo", codigo);
+
+                return new CatalogoResponse
+                {
+                    Codigo = 99,
+                    Descripcion = "Código de error no catalogado"
+                };
+            }
+
+            _logger.LogInformation(
+                "Catálogo encontrado. Código:{Codigo} - {Descripcion}",
+                result.Codigo,
+                result.Descripcion);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error accediendo al catálogo de errores. Código solicitado: {Codigo}", codigo);
+
+            return new CatalogoResponse
+            {
+                Codigo = 99,
+                Descripcion = "Error interno del sistema"
+            };
+        }
+    }
+
+    public Task<string> ObtenerDescripcionAsync(string codigoError)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+public class TransaccionFlotanteRepository : ITransaccionFlotanteRepository
+{
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<TransaccionFlotanteRepository> _logger;
+
+    public TransaccionFlotanteRepository(
+        IConfiguration configuration,
+        ILogger<TransaccionFlotanteRepository> logger)
+    {
+        _configuration = configuration;
+        _logger = logger;
+    }
+
+    public async Task<TransaccionFlotanteProveedorDataModel?>
+        ObtenerDatosProveedorAsync(string counterpartCard)
+    {
+        _logger.LogInformation(
+            "Buscando datos del proveedor para tarjeta terminada en {Ultimos4}",
+            counterpartCard[^4..]);
+
+        using var connection =
+            new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+        var result = await connection.QueryFirstOrDefaultAsync<
+            TransaccionFlotanteProveedorDataModel>(
+            "sp_ObtenerDatosTransaccionFlotante",
+            new { CounterpartCard = counterpartCard },
+            commandType: CommandType.StoredProcedure
+        );
+
+        if (result == null)
+            _logger.LogWarning(
+                "No se encontraron datos del proveedor para la tarjeta solicitada");
+
+        return result;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public async Task<string> EnviarTransaccionAsync(ProveedorTransaccionFlotanteRequestDto request)
+{
+    _logger.LogInformation("Iniciando consumo de API proveedor");
+
+    var token = await _tokenService.ObtenerAccessTokenAsync();
+
+    var httpRequest = new HttpRequestMessage(
+        HttpMethod.Post,
+        _configuration["Proveedor:TransaccionesUrl"]);
+
+    httpRequest.Headers.Authorization =
+        new AuthenticationHeaderValue("Bearer", token);
+
+    httpRequest.Content = new StringContent(
+        JsonSerializer.Serialize(request),
+        Encoding.UTF8,
+        "application/json");
+
+    var response = await _httpClient.SendAsync(httpRequest);
+
+    _logger.LogInformation(
+        "Respuesta proveedor HTTP {StatusCode}",
+        response.StatusCode);
+
+    response.EnsureSuccessStatusCode();
+
+    return await response.Content.ReadAsStringAsync();
+}
+
+
+
+
+
+
+
+
+
+
+public async Task<string> ObtenerAccessTokenAsync()
+{
+    if (!string.IsNullOrEmpty(_token) && DateTime.UtcNow < _expiracion.AddSeconds(-10))
+    {
+        _logger.LogInformation("Token vigente reutilizado");
+        return _token;
+    }
+
+    _logger.LogInformation("Solicitando nuevo token al proveedor");
+
+    var response = await _httpClient.PostAsync(
+        _configuration["Proveedor:TokenUrl"],
+        new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "client_id", _configuration["Proveedor:ClientId"] },
+            { "client_secret", _configuration["Proveedor:ClientSecret"] },
+            { "grant_type", "client_credentials" }
+        })
+    );
+
+    response.EnsureSuccessStatusCode();
+
+    var json = await response.Content.ReadAsStringAsync();
+    var tokenResponse = JsonSerializer.Deserialize<JsonElement>(json);
+
+    _token = tokenResponse.GetProperty("access_token").GetString();
+    var expiresIn = tokenResponse.GetProperty("expires_in").GetInt32();
+
+    _expiracion = DateTime.UtcNow.AddSeconds(expiresIn);
+
+    _logger.LogInformation("Token obtenido correctamente");
+
+    return _token!;
+}
+
+
+
+
+
+
+
+public async Task<LegacyTransaccionesResponseDto> ProcesarAsync(
+    TransaccionesFlotantesRequestDto request)
+{
+    _logger.LogInformation(
+        "Inicio procesamiento transacciones flotantes");
+
+    try
+    {
+        var data =
+            await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+        if (data == null)
+        {
+            _logger.LogWarning("Datos del proveedor no encontrados");
+            return await CrearRespuestaError(2);
+        }
+
+        var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+        {
+            Card = new()
+            {
+                Bin = data.Bin,
+                UltimosCuatroDigitos = data.UltimosCuatroDigitos
+            },
+            Client = new()
+            {
+                NumeroDocumento = data.NumeroDocumento,
+                TipoDocumento = data.TipoDocumento,
+                Sexo = data.Sexo
+            }
+        };
+
+        var rawResponse =
+            await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+
+        var proveedorData =
+            JsonSerializer.Deserialize<ProveedorResponseDto>(rawResponse)
+            ?? throw new Exception("Respuesta inválida del proveedor");
+
+        if (!proveedorData.Authorizations.Any())
+        {
+            _logger.LogWarning("Proveedor respondió sin autorizaciones");
+            return await CrearRespuestaError(2);
+        }
+
+        _logger.LogInformation(
+            "Autorizaciones recibidas: {Cantidad}",
+            proveedorData.Authorizations.Count);
+
+        var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(1);
+
+        return new LegacyTransaccionesResponseDto
+        {
+            Result =
+            {
+                Codigo = catalogo.Codigo,
+                Descripcion = catalogo.Descripcion
+            },
+            Respuesta = proveedorData.Authorizations.Select(a => new LegacyAutorizacionDto
+            {
+                Date = a.Date,
+                Merchant_Name = a.Merchant_Name,
+                Amount = a.Amount,
+                Currency = a.Currency == "USD" ? "U$S" : a.Currency,
+                Reference = a.Reference
+            }).ToList()
+        };
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error no controlado en el servicio");
+        throw;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+[HttpPost]
+public async Task<IActionResult> Procesar(
+    [FromBody] TransaccionesFlotantesRequestDto request)
+{
+    _logger.LogInformation("Request recibido en controller");
+
+    try
+    {
+        var response = await _service.ProcesarAsync(request);
+        return Ok(response);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogCritical(ex, "Error 500 no controlado");
+        return StatusCode(500, new
+        {
+            codigo = 500,
+            mensaje = "Error interno del sistema"
+        });
+    }
+}
+
+
+
+
+
+
+
+
+
+
