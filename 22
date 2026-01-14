@@ -1,0 +1,53 @@
+Mira que ya casi está como queremos
+
+	Esto me devolvió mi microservicio:
+  
+{
+  "result": {
+    "codigo": 1,
+    "descripcion": "True"
+  },
+  "respuesta": {
+    "total_floating": {
+      "total_HNL": 0,
+      "total_USD": 0
+    },
+    "authorizations": [
+      {
+        "transaction_type": "COMPRAS",
+        "date": "2026-01-14T15:11",
+        "currency": "HNL",
+        "amount": 300,
+        "merchant_name": "WALMART BOULEVARD DEL NOR",
+        "reference": "123456",
+        "movement_type": "C"
+      }
+    ]
+  }
+}
+
+Y este es al que quiero acomplarme:
+
+{
+  "result": {
+    "codigo": 1,
+    "descripcion": "True"
+  },
+  "total_floating": {
+    "total_HNL": "0",
+    "total_USD": "-1.63"
+  },
+  "respuesta": [
+    {
+      "date": "2026-01-13T10:03:17-06:00",
+      "merchant_name": "GOOGLE*CLASH OF CLANS",
+      "amount": 1.63,
+      "currency": "USD",
+      "reference": null,
+      "transaction_type": "CON U$S"
+    }
+  ]
+}
+
+
+La palabra respuesta está donde no deberia, y ... me gustaria reemplazar la palabra authorization por respuesta, justamente
