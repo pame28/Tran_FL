@@ -1,0 +1,191 @@
+namespace transacciones_flotantes.DTOs.Response
+{
+    public class LegacyTransaccionesResponseDto
+    {
+        public ResultDto Result { get; set; } = new();
+
+        public TotalesFloatingDto Total_Floating { get; set; } = new();
+
+        public List<LegacyAutorizacionDto> Respuesta { get; set; } = new();
+    }
+
+    public class ResultDto
+    {
+        public int Codigo { get; set; }
+        public string Descripcion { get; set; } = string.Empty;
+    }
+
+    public class TotalesFloatingDto
+    {
+        public string Total_HNL { get; set; } = "0";
+        public string Total_USD { get; set; } = "0";
+    }
+
+    public class LegacyAutorizacionDto
+    {
+        public DateTime Date { get; set; }
+        public string Merchant_Name { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string Currency { get; set; } = string.Empty;
+        public string? Reference { get; set; }
+        public string Transaction_Type { get; set; } = string.Empty;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+namespace transacciones_flotantes.DTOs.Proveedor
+{
+    public class ProveedorResponseDto
+    {
+        public TotalesProveedorDto Total_Floating { get; set; } = new();
+        public List<ProveedorAutorizacionDto> Authorizations { get; set; } = new();
+    }
+
+    public class TotalesProveedorDto
+    {
+        public decimal Total_HNL { get; set; }
+        public decimal Total_USD { get; set; }
+    }
+
+    public class ProveedorAutorizacionDto
+    {
+        public DateTime Date { get; set; }
+        public string Merchant_Name { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string Currency { get; set; } = string.Empty;
+        public string? Reference { get; set; }
+        public string Transaction_Type { get; set; } = string.Empty;
+        public string Movement_Type { get; set; } = string.Empty;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+using System.Text.Json;
+using transacciones_flotantes.DTOs.Proveedor;
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Service
+{
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+    {
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+        private readonly ILogger<TransaccionesFlotantesService> _logger;
+
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ICatalogoErroresRepository catalogoErrores,
+            ILogger<TransaccionesFlotantesService> logger)
+        {
+            _repository = repository;
+            _proveedorClient = proveedorClient;
+            _catalogoErrores = catalogoErrores;
+            _logger = logger;
+        }
+
+        public async Task<LegacyTransaccionesResponseDto> ProcesarAsync(
+            TransaccionesFlotantesRequestDto request)
+        {
+            try
+            {
+                var data =
+                    await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+                if (data == null)
+                    return await CrearRespuestaError(2);
+
+                var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+                {
+                    Card = new()
+                    {
+                        Bin = data.Bin,
+                        UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                    },
+                    Client = new()
+                    {
+                        NumeroDocumento = data.NumeroDocumento,
+                        TipoDocumento = data.TipoDocumento,
+                        Sexo = data.Sexo
+                    }
+                };
+
+                var rawResponse =
+                    await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+
+                var proveedorData =
+                    JsonSerializer.Deserialize<ProveedorResponseDto>(rawResponse)!;
+
+                var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(1);
+
+                return new LegacyTransaccionesResponseDto
+                {
+                    Result =
+                    {
+                        Codigo = catalogo.Codigo,
+                        Descripcion = catalogo.Descripcion
+                    },
+                    Total_Floating =
+                    {
+                        Total_HNL = proveedorData.Total_Floating.Total_HNL.ToString("0.##"),
+                        Total_USD = proveedorData.Total_Floating.Total_USD.ToString("0.##")
+                    },
+                    Respuesta = proveedorData.Authorizations.Select(a => new LegacyAutorizacionDto
+                    {
+                        Date = a.Date,
+                        Merchant_Name = a.Merchant_Name,
+                        Amount = a.Amount,
+                        Currency = a.Currency,
+                        Reference = a.Reference,
+                        Transaction_Type = a.Transaction_Type
+                    }).ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error no controlado");
+                return await CrearRespuestaError(99);
+            }
+        }
+
+        private async Task<LegacyTransaccionesResponseDto> CrearRespuestaError(int codigo)
+        {
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(codigo);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Respuesta = new()
+            };
+        }
+    }
+}
+
+
+
+
