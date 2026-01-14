@@ -1,0 +1,33 @@
+Ok, me están solicitando que realice modificaciones aqui... me piden edque cuando sean errores no controlados me mande al error 500 y con la excepcion, puedes hacer eso por mi?
+
+
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Controllers.TransaccionesFlotantes
+{
+   // [Route("api/[controller]")]
+
+    [ApiController]
+    [Route("api/transacciones-flotantes")]
+    public class TransaccionesFlotantesController : ControllerBase
+    {
+        private readonly ITransaccionesFlotantesService _service;
+
+        public TransaccionesFlotantesController(
+            ITransaccionesFlotantesService service)
+        {
+            _service = service;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Procesar(
+            [FromBody] TransaccionesFlotantesRequestDto request)
+        {
+            var response = await _service.ProcesarAsync(request);
+            return Ok(response);
+        }
+    }
+}
