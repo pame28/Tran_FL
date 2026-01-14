@@ -1,0 +1,208 @@
+[ApiController]
+[Route("api/transacciones-flotantes")]
+public class TransaccionesFlotantesController : ControllerBase
+{
+    private readonly ITransaccionesFlotantesService _service;
+    private readonly ILogger<TransaccionesFlotantesController> _logger;
+
+    public TransaccionesFlotantesController(
+        ITransaccionesFlotantesService service,
+        ILogger<TransaccionesFlotantesController> logger)
+    {
+        _service = service;
+        _logger = logger;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Procesar(
+        [FromBody] TransaccionesFlotantesRequestDto request)
+    {
+        _logger.LogInformation(
+            "Inicio procesamiento transacción | Referencia: {Referencia}",
+            request?.Referencia);
+
+        if (!ModelState.IsValid)
+        {
+            _logger.LogWarning(
+                "Request inválido | Errores: {@Errores}",
+                ModelState);
+
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var response = await _service.ProcesarAsync(request);
+
+            _logger.LogInformation(
+                "Fin procesamiento transacción | Referencia: {Referencia} | Resultado: {Resultado}",
+                request.Referencia,
+                response.Codigo);
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error inesperado procesando transacción | Referencia: {Referencia}",
+                request?.Referencia);
+
+            return StatusCode(500, "Error interno del servidor");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+-------
+
+
+
+public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+{
+    private readonly IProveedorTokenService _tokenService;
+    private readonly IProveedorApiClient _apiClient;
+    private readonly ICatalogoErroresRepository _catalogoErrores;
+    private readonly ILogger<TransaccionesFlotantesService> _logger;
+
+    public TransaccionesFlotantesService(
+        IProveedorTokenService tokenService,
+        IProveedorApiClient apiClient,
+        ICatalogoErroresRepository catalogoErrores,
+        ILogger<TransaccionesFlotantesService> logger)
+    {
+        _tokenService = tokenService;
+        _apiClient = apiClient;
+        _catalogoErrores = catalogoErrores;
+        _logger = logger;
+    }
+
+    public async Task<LegacyTransaccionesResponseDto> ProcesarAsync(
+        TransaccionesFlotantesRequestDto request)
+    {
+        _logger.LogInformation(
+            "Procesando transacción | Referencia: {Referencia}",
+            request.Referencia);
+
+        var token = await _tokenService.ObtenerTokenAsync();
+
+        _logger.LogInformation(
+            "Token obtenido correctamente | Referencia: {Referencia}",
+            request.Referencia);
+
+        var proveedorResponse = await _apiClient.EnviarTransaccionAsync(request, token);
+
+        _logger.LogInformation(
+            "Respuesta proveedor recibida | CodigoProveedor: {Codigo}",
+            proveedorResponse.Codigo);
+
+        var errorCatalogo = await _catalogoErrores.ObtenerAsync(proveedorResponse.Codigo);
+
+        _logger.LogInformation(
+            "Resultado catálogo errores | Codigo: {Codigo} | Existe: {Existe}",
+            proveedorResponse.Codigo,
+            errorCatalogo != null);
+
+        return MapearRespuesta(proveedorResponse, errorCatalogo);
+    }
+}
+
+
+
+
+
+
+
+
+
+-----
+
+
+
+
+public class ProveedorTokenService : IProveedorTokenService
+{
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<ProveedorTokenService> _logger;
+
+    public ProveedorTokenService(
+        HttpClient httpClient,
+        ILogger<ProveedorTokenService> logger)
+    {
+        _httpClient = httpClient;
+        _logger = logger;
+    }
+
+    public async Task<string> ObtenerTokenAsync()
+    {
+        _logger.LogInformation("Solicitando nuevo access token al proveedor");
+
+        var response = await _httpClient.PostAsync("/token", null);
+
+        _logger.LogInformation(
+            "Respuesta token proveedor | StatusCode: {StatusCode}",
+            response.StatusCode);
+
+        response.EnsureSuccessStatusCode();
+
+        return "TOKEN_SIMULADO";
+    }
+}
+
+
+
+
+
+
+
+
+
+
+------
+
+
+
+public class CatalogoErroresRepository : ICatalogoErroresRepository
+{
+    private readonly ILogger<CatalogoErroresRepository> _logger;
+
+    public CatalogoErroresRepository(
+        ILogger<CatalogoErroresRepository> logger)
+    {
+        _logger = logger;
+    }
+
+    public Task<CatalogoError?> ObtenerAsync(int codigo)
+    {
+        _logger.LogInformation(
+            "Consultando catálogo errores | Codigo: {Codigo}",
+            codigo);
+
+        // Simulación
+        if (codigo == 1)
+        {
+            _logger.LogInformation(
+                "Respuesta del catalogo cod:{Codigo} - True",
+                codigo);
+
+            return Task.FromResult<CatalogoError?>(new CatalogoError());
+        }
+
+        _logger.LogInformation(
+            "Respuesta del catalogo cod:{Codigo} - No se encontraron registros",
+            codigo);
+
+        return Task.FromResult<CatalogoError?>(null);
+    }
+}
+
+
+
