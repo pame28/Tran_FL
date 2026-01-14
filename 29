@@ -1,0 +1,477 @@
+Ok, otra cosa que me solicitarion fue que agregara losg, muchos.. actualmente ya hay, y me parece que se gaurdan por dia, y eso está bien.
+Mira como se ven actualmente:
+
+
+14-01-2026 08:20:02.930 [2] [Information] Microsoft.Hosting.Lifetime - Now listening on: http://localhost:5260
+14-01-2026 08:20:03.119 [2] [Information] Microsoft.Hosting.Lifetime - Application started. Press Ctrl+C to shut down.
+14-01-2026 08:20:03.122 [2] [Information] Microsoft.Hosting.Lifetime - Hosting environment: Development
+14-01-2026 08:20:03.124 [2] [Information] Microsoft.Hosting.Lifetime - Content root path: C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes
+14-01-2026 08:20:03.770 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/index.html - null null
+14-01-2026 08:20:04.233 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/index.html - 200 null text/html;charset=utf-8 476.3614ms
+14-01-2026 08:20:04.246 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - null null
+14-01-2026 08:20:04.257 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - 200 16531 application/javascript; charset=utf-8 12.7184ms
+14-01-2026 08:20:04.296 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_vs/browserLink - null null
+14-01-2026 08:20:04.344 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_vs/browserLink - 200 null text/javascript; charset=UTF-8 47.7871ms
+14-01-2026 08:20:04.407 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - null null
+14-01-2026 08:20:04.451 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 43.6883ms
+14-01-2026 08:20:55.021 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/TransaccionesFlotantes - application/json 67
+14-01-2026 08:20:55.034 [7] [Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware - Failed to determine the https port for redirect.
+14-01-2026 08:20:55.044 [7] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 08:20:55.092 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 08:20:56.575 [15] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 08:20:56.588 [15] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 08:20:56.597 [15] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 08:20:56.781 [9] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 175.934ms - 200
+14-01-2026 08:20:56.787 [9] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 204.3058ms - 200
+14-01-2026 08:20:56.807 [9] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 08:20:56.810 [9] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 08:20:56.815 [9] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 08:20:56.864 [15] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 45.318ms - 200
+14-01-2026 08:20:56.869 [15] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 58.5102ms - 200
+14-01-2026 08:20:56.966 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing ObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.GeneralResponse'.
+14-01-2026 08:20:56.986 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 1882.456ms
+14-01-2026 08:20:56.993 [10] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 08:20:56.999 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/TransaccionesFlotantes - 200 null application/json; charset=utf-8 1978.2569ms
+14-01-2026 09:08:17.006 [2] [Information] Microsoft.Hosting.Lifetime - Now listening on: http://localhost:5260
+14-01-2026 09:08:17.151 [2] [Information] Microsoft.Hosting.Lifetime - Application started. Press Ctrl+C to shut down.
+14-01-2026 09:08:17.153 [2] [Information] Microsoft.Hosting.Lifetime - Hosting environment: Development
+14-01-2026 09:08:17.154 [2] [Information] Microsoft.Hosting.Lifetime - Content root path: C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes
+14-01-2026 09:10:45.253 [2] [Information] Microsoft.Hosting.Lifetime - Now listening on: http://localhost:5260
+14-01-2026 09:10:45.409 [2] [Information] Microsoft.Hosting.Lifetime - Application started. Press Ctrl+C to shut down.
+14-01-2026 09:10:45.412 [2] [Information] Microsoft.Hosting.Lifetime - Hosting environment: Development
+14-01-2026 09:10:45.413 [2] [Information] Microsoft.Hosting.Lifetime - Content root path: C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes
+14-01-2026 09:10:46.042 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/index.html - null null
+14-01-2026 09:10:46.476 [13] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/index.html - 200 null text/html;charset=utf-8 442.1978ms
+14-01-2026 09:10:46.501 [13] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - null null
+14-01-2026 09:10:46.502 [12] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_vs/browserLink - null null
+14-01-2026 09:10:46.512 [13] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - 200 16531 application/javascript; charset=utf-8 11.6407ms
+14-01-2026 09:10:46.555 [13] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_vs/browserLink - 200 null text/javascript; charset=UTF-8 53.525ms
+14-01-2026 09:10:46.605 [13] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - null null
+14-01-2026 09:10:46.631 [13] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 25.661ms
+14-01-2026 09:10:51.815 [12] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 57
+14-01-2026 09:10:51.828 [12] [Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware - Failed to determine the https port for redirect.
+14-01-2026 09:10:51.837 [12] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 09:10:51.892 [12] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 09:10:56.087 [14] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:2 - No se encontraron registros
+14-01-2026 09:10:56.122 [14] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+ApiResponseDto`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+14-01-2026 09:10:56.156 [14] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 4250.5381ms
+14-01-2026 09:10:56.161 [14] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 09:10:56.169 [14] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 4354.2229ms
+14-01-2026 09:11:10.932 [14] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 09:11:10.937 [14] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 09:11:10.940 [14] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 09:11:11.010 [12] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 09:11:11.022 [12] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 09:11:11.028 [12] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 09:11:11.196 [12] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 160.9674ms - 200
+14-01-2026 09:11:11.203 [12] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 183.1787ms - 200
+14-01-2026 09:11:11.218 [12] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 09:11:11.221 [12] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 09:11:11.223 [12] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 09:11:11.270 [14] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 43.4321ms - 200
+14-01-2026 09:11:11.273 [14] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 51.1732ms - 200
+14-01-2026 09:11:11.327 [14] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:1 - True
+14-01-2026 09:11:11.333 [14] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+ApiResponseDto`1[[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+14-01-2026 09:11:11.341 [14] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 397.1875ms
+14-01-2026 09:11:11.346 [14] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 09:11:11.350 [14] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 417.6928ms
+14-01-2026 12:04:45.780 [2] [Information] Microsoft.Hosting.Lifetime - Now listening on: http://localhost:5260
+14-01-2026 12:04:45.937 [2] [Information] Microsoft.Hosting.Lifetime - Application started. Press Ctrl+C to shut down.
+14-01-2026 12:04:45.939 [2] [Information] Microsoft.Hosting.Lifetime - Hosting environment: Development
+14-01-2026 12:04:45.940 [2] [Information] Microsoft.Hosting.Lifetime - Content root path: C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes
+14-01-2026 12:04:46.486 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/index.html - null null
+14-01-2026 12:04:46.974 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/index.html - 200 null text/html;charset=utf-8 497.5055ms
+14-01-2026 12:04:46.986 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - null null
+14-01-2026 12:04:46.993 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - 200 16531 application/javascript; charset=utf-8 8.1385ms
+14-01-2026 12:04:47.053 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_vs/browserLink - null null
+14-01-2026 12:04:47.132 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_vs/browserLink - 200 null text/javascript; charset=UTF-8 80.2296ms
+14-01-2026 12:04:47.204 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - null null
+14-01-2026 12:04:47.222 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 18.1171ms
+14-01-2026 12:04:52.080 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 57
+14-01-2026 12:04:52.095 [9] [Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware - Failed to determine the https port for redirect.
+14-01-2026 12:04:52.105 [9] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 12:04:52.159 [9] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 12:04:53.548 [10] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:2 - No se encontraron registros
+14-01-2026 12:04:53.569 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 12:04:53.605 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 1433.1543ms
+14-01-2026 12:04:53.613 [10] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 12:04:53.619 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 1539.5651ms
+14-01-2026 12:06:09.559 [20] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 12:06:09.569 [20] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 12:06:09.571 [20] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 12:06:09.633 [3] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 12:06:09.641 [3] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 12:06:09.645 [3] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 12:06:09.807 [22] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 157.2261ms - 200
+14-01-2026 12:06:09.812 [22] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 173.4729ms - 200
+14-01-2026 12:06:09.823 [22] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 12:06:09.826 [22] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 12:06:09.829 [22] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 12:06:09.867 [3] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 35.4221ms - 200
+14-01-2026 12:06:09.870 [3] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 43.8762ms - 200
+14-01-2026 12:06:09.926 [3] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:1 - True
+14-01-2026 12:06:09.929 [3] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 12:06:09.934 [3] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 359.4336ms
+14-01-2026 12:06:09.936 [3] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 12:06:09.938 [3] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 378.9964ms
+14-01-2026 12:06:15.717 [22] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 12:06:15.722 [22] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 12:06:15.724 [22] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 12:06:15.784 [3] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 12:06:15.789 [3] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 12:06:15.793 [3] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 12:06:15.803 [3] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 6.3339ms - 200
+14-01-2026 12:06:15.806 [3] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 17.3694ms - 200
+14-01-2026 12:06:15.812 [3] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 12:06:15.816 [3] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 12:06:15.819 [3] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 12:06:15.825 [3] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 3.2986ms - 200
+14-01-2026 12:06:15.828 [3] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 11.2677ms - 200
+14-01-2026 12:06:15.878 [22] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:1 - True
+14-01-2026 12:06:15.883 [22] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 12:06:15.885 [22] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 157.8122ms
+14-01-2026 12:06:15.887 [22] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 12:06:15.890 [22] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 173.5041ms
+14-01-2026 12:07:31.084 [25] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 12:07:31.092 [25] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 12:07:31.095 [25] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 12:07:31.149 [21] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 12:07:31.153 [21] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 12:07:31.156 [21] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 12:07:31.186 [21] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 27.6759ms - 200
+14-01-2026 12:07:31.189 [21] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 36.7781ms - 200
+14-01-2026 12:07:31.193 [21] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 12:07:31.198 [21] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 12:07:31.200 [21] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 12:07:31.223 [25] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 20.2083ms - 200
+14-01-2026 12:07:31.227 [25] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 28.511ms - 200
+14-01-2026 12:07:31.277 [21] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:1 - True
+14-01-2026 12:07:31.281 [21] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 12:07:31.284 [21] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 185.6187ms
+14-01-2026 12:07:31.290 [21] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 12:07:31.292 [21] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 208.5187ms
+14-01-2026 15:25:21.018 [2] [Information] Microsoft.Hosting.Lifetime - Now listening on: http://localhost:5260
+14-01-2026 15:25:21.287 [2] [Information] Microsoft.Hosting.Lifetime - Application started. Press Ctrl+C to shut down.
+14-01-2026 15:25:21.293 [2] [Information] Microsoft.Hosting.Lifetime - Hosting environment: Development
+14-01-2026 15:25:21.304 [2] [Information] Microsoft.Hosting.Lifetime - Content root path: C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes
+14-01-2026 15:25:22.213 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/index.html - null null
+14-01-2026 15:25:23.139 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/index.html - 200 null text/html;charset=utf-8 946.8966ms
+14-01-2026 15:25:23.183 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - null null
+14-01-2026 15:25:23.185 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_vs/browserLink - null null
+14-01-2026 15:25:23.206 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - 200 16531 application/javascript; charset=utf-8 25.3089ms
+14-01-2026 15:25:23.294 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_vs/browserLink - 200 null text/javascript; charset=UTF-8 108.652ms
+14-01-2026 15:25:23.398 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - null null
+14-01-2026 15:25:23.432 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 33.7625ms
+14-01-2026 15:25:30.530 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 57
+14-01-2026 15:25:30.566 [9] [Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware - Failed to determine the https port for redirect.
+14-01-2026 15:25:30.583 [9] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:25:30.679 [9] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 15:25:32.910 [7] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:2 - No se encontraron registros
+14-01-2026 15:25:32.948 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 15:25:33.009 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 2309.2331ms
+14-01-2026 15:25:33.022 [7] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:25:33.030 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 2499.909ms
+14-01-2026 15:25:50.008 [15] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 15:25:50.028 [15] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:25:50.032 [15] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 15:25:50.140 [15] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 15:25:50.157 [15] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 15:25:50.167 [15] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 15:25:50.460 [10] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 277.7845ms - 200
+14-01-2026 15:25:50.476 [10] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 322.7911ms - 200
+14-01-2026 15:25:50.506 [10] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 15:25:50.514 [10] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 15:25:50.526 [10] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 15:25:50.605 [7] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 71.5519ms - 200
+14-01-2026 15:25:50.615 [7] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 100.2335ms - 200
+14-01-2026 15:25:50.701 [7] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:1 - True
+14-01-2026 15:25:50.719 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 15:25:50.738 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 696.0031ms
+14-01-2026 15:25:50.748 [7] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:25:50.762 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 753.8034ms
+14-01-2026 15:26:00.407 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 53
+14-01-2026 15:26:00.434 [10] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:26:00.445 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 15:26:00.570 [10] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:2 - No se encontraron registros
+14-01-2026 15:26:00.586 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 15:26:00.602 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 135.9757ms
+14-01-2026 15:26:00.615 [10] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:26:00.624 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 216.4611ms
+14-01-2026 15:26:24.022 [15] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 29
+14-01-2026 15:26:24.039 [15] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:26:24.048 [15] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 15:26:24.073 [15] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing BadRequestObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ValidationProblemDetails'.
+14-01-2026 15:26:24.125 [15] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 61.0652ms
+14-01-2026 15:26:24.131 [15] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:26:24.135 [15] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 400 null application/problem+json; charset=utf-8 112.2656ms
+14-01-2026 15:28:19.826 [20] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 15:28:19.851 [20] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:28:19.860 [20] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 15:28:19.936 [20] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 15:28:19.946 [20] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 15:28:19.956 [20] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 15:28:20.024 [15] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 59.6747ms - 200
+14-01-2026 15:28:20.028 [15] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 82.3471ms - 200
+14-01-2026 15:28:20.034 [15] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 15:28:20.038 [15] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 15:28:20.043 [15] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 15:28:20.091 [15] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 44.7196ms - 200
+14-01-2026 15:28:20.095 [15] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 57.0683ms - 200
+14-01-2026 15:28:20.152 [20] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:1 - True
+14-01-2026 15:28:20.156 [20] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 15:28:20.165 [20] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 291.4847ms
+14-01-2026 15:28:20.171 [20] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 15:28:20.176 [20] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 349.9099ms
+14-01-2026 17:12:21.426 [2] [Information] Microsoft.Hosting.Lifetime - Now listening on: http://localhost:5260
+14-01-2026 17:12:21.590 [2] [Information] Microsoft.Hosting.Lifetime - Application started. Press Ctrl+C to shut down.
+14-01-2026 17:12:21.592 [2] [Information] Microsoft.Hosting.Lifetime - Hosting environment: Development
+14-01-2026 17:12:21.596 [2] [Information] Microsoft.Hosting.Lifetime - Content root path: C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes
+14-01-2026 17:12:21.973 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/index.html - null null
+14-01-2026 17:12:22.524 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/index.html - 200 null text/html;charset=utf-8 565.9408ms
+14-01-2026 17:12:22.546 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - null null
+14-01-2026 17:12:22.558 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - 200 16531 application/javascript; charset=utf-8 13.4942ms
+14-01-2026 17:12:22.596 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_vs/browserLink - null null
+14-01-2026 17:12:22.652 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_vs/browserLink - 200 null text/javascript; charset=UTF-8 55.9871ms
+14-01-2026 17:12:22.696 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - null null
+14-01-2026 17:12:22.711 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 15.7823ms
+14-01-2026 17:12:28.701 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 57
+14-01-2026 17:12:28.723 [7] [Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware - Failed to determine the https port for redirect.
+14-01-2026 17:12:28.732 [7] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:12:28.798 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 17:12:30.492 [10] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:2 - No se encontraron registros
+14-01-2026 17:12:30.523 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 17:12:30.565 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 1754.7173ms
+14-01-2026 17:12:30.577 [10] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:12:30.589 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 1888.6512ms
+14-01-2026 17:14:36.419 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 17:14:36.428 [7] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:14:36.433 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 17:14:36.545 [7] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:2 - No se encontraron registros
+14-01-2026 17:14:36.549 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 17:14:36.552 [7] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 114.2583ms
+14-01-2026 17:14:36.555 [7] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:14:36.557 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 138.091ms
+14-01-2026 17:14:46.894 [21] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 17:14:46.902 [21] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:14:46.904 [21] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 17:14:46.973 [20] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 17:14:46.987 [20] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 17:14:46.994 [20] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 17:14:47.157 [21] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 155.6102ms - 200
+14-01-2026 17:14:47.163 [21] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 178.8ms - 200
+14-01-2026 17:14:47.177 [21] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 17:14:47.179 [21] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 17:14:47.181 [21] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 17:14:47.224 [21] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 41.7428ms - 200
+14-01-2026 17:14:47.230 [21] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 50.4541ms - 200
+14-01-2026 17:14:47.296 [19] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:1 - True
+14-01-2026 17:14:47.305 [19] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 17:14:47.318 [19] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 409.59ms
+14-01-2026 17:14:47.322 [19] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:14:47.325 [19] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 431.6853ms
+14-01-2026 17:27:20.314 [2] [Information] Microsoft.Hosting.Lifetime - Now listening on: http://localhost:5260
+14-01-2026 17:27:20.577 [2] [Information] Microsoft.Hosting.Lifetime - Application started. Press Ctrl+C to shut down.
+14-01-2026 17:27:20.582 [2] [Information] Microsoft.Hosting.Lifetime - Hosting environment: Development
+14-01-2026 17:27:20.585 [2] [Information] Microsoft.Hosting.Lifetime - Content root path: C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes
+14-01-2026 17:27:21.065 [8] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/index.html - null null
+14-01-2026 17:27:21.534 [6] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/index.html - 200 null text/html;charset=utf-8 471.9205ms
+14-01-2026 17:27:21.558 [6] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - null null
+14-01-2026 17:27:21.558 [11] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_vs/browserLink - null null
+14-01-2026 17:27:21.565 [6] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - 200 16531 application/javascript; charset=utf-8 7.4394ms
+14-01-2026 17:27:21.619 [11] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_vs/browserLink - 200 null text/javascript; charset=UTF-8 60.3985ms
+14-01-2026 17:27:21.673 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - null null
+14-01-2026 17:27:21.691 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 18.1839ms
+14-01-2026 17:27:24.633 [11] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 57
+14-01-2026 17:27:24.645 [11] [Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware - Failed to determine the https port for redirect.
+14-01-2026 17:27:24.651 [11] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:27:24.697 [11] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 17:27:26.082 [11] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:2 - No se encontraron registros
+14-01-2026 17:27:26.101 [11] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 17:27:26.144 [11] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 1436.2535ms
+14-01-2026 17:27:26.149 [11] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:27:26.156 [11] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 1523.1892ms
+14-01-2026 17:27:36.101 [11] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 26
+14-01-2026 17:27:36.109 [11] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:27:36.117 [11] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 17:27:36.131 [11] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing BadRequestObjectResult, writing value of type 'Microsoft.AspNetCore.Mvc.ValidationProblemDetails'.
+14-01-2026 17:27:36.170 [11] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 47.6298ms
+14-01-2026 17:27:36.178 [11] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:27:36.182 [11] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 400 null application/problem+json; charset=utf-8 81.1906ms
+14-01-2026 17:27:51.073 [6] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+14-01-2026 17:27:51.078 [6] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:27:51.081 [6] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+14-01-2026 17:27:51.141 [11] [Information] transacciones_flotantes.Service.ProveedorTokenService - Solicitando nuevo access token al proveedor (simulación)
+14-01-2026 17:27:51.149 [11] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+14-01-2026 17:27:51.154 [11] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+14-01-2026 17:27:51.321 [6] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 158.4662ms - 200
+14-01-2026 17:27:51.326 [6] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 178.6237ms - 200
+14-01-2026 17:27:51.343 [6] [Information] transacciones_flotantes.Service.ProveedorApiClient - Enviando request al proveedor simulado
+14-01-2026 17:27:51.349 [6] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+14-01-2026 17:27:51.352 [6] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Sending HTTP request POST https://localhost:5002/transacciones
+14-01-2026 17:27:51.387 [9] [Information] System.Net.Http.HttpClient.IProveedorApiClient.ClientHandler - Received HTTP response headers after 32.4048ms - 200
+14-01-2026 17:27:51.390 [9] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - End processing HTTP request after 41.0527ms - 200
+14-01-2026 17:27:51.467 [9] [Information] transacciones_flotantes.Repository.CatalogoErroresRepository - Respuesta del catalogo cod:1 - True
+14-01-2026 17:27:51.475 [9] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing OkObjectResult, writing value of type 'transacciones_flotantes.DTOs.Response.ResponseDto+LegacyTransaccionesResponseDto'.
+14-01-2026 17:27:51.485 [9] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 402.5338ms
+14-01-2026 17:27:51.489 [9] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+14-01-2026 17:27:51.493 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 200 null application/json; charset=utf-8 419.545ms
+
+
+
+
+Lo cual está muy bien, pero creo que puede existir mas info y que se entienda mucho más. Como el request que se arma para mandar y consumir al proveedor, la respuesta tal  cual la manda el proveedor, muchas cosas asi y que sea mucho mas facil identificarla, el tpken para la autenticacion, y todo lo que se manda en el header, los errores no controlados, con toda la información .. como el detalle, etc 
+
+
+
+
+
+
+
+
+
+
+
+using System.Data;
+using Microsoft.Data.SqlClient;
+using Dapper;
+using transacciones_flotantes.Models.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+
+
+namespace transacciones_flotantes.Repository
+{
+    public class TransaccionFlotanteRepository : ITransaccionFlotanteRepository
+    {
+        private readonly IConfiguration _configuration;
+
+        public TransaccionFlotanteRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<TransaccionFlotanteProveedorDataModel?>
+            ObtenerDatosProveedorAsync(string counterpartCard)
+        {
+            using var connection =
+                new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+            return await connection.QueryFirstOrDefaultAsync<
+                TransaccionFlotanteProveedorDataModel>(
+                "sp_ObtenerDatosTransaccionFlotante",
+                new { CounterpartCard = counterpartCard },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+----------
+
+
+using System.Text.Json;
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+using static transacciones_flotantes.DTOs.Response.ResponseDto;
+using static transacciones_flotantes.DTOs.TransaccionesFlotantes.ProveedorTransaccionesFlotantesResponseDto;
+
+namespace transacciones_flotantes.Service
+{
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+    {
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ICatalogoErroresRepository catalogoErrores)
+        {
+            _repository = repository;
+            _proveedorClient = proveedorClient;
+            _catalogoErrores = catalogoErrores;
+        }
+
+        public async Task<LegacyTransaccionesResponseDto> ProcesarAsync(
+            TransaccionesFlotantesRequestDto request)
+        {
+            var data =
+                await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+            if (data == null)
+                return await CrearRespuestaError(2);
+
+            var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+            {
+                Card = new()
+                {
+                    Bin = data.Bin,
+                    UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                },
+                Client = new()
+                {
+                    NumeroDocumento = data.NumeroDocumento,
+                    TipoDocumento = data.TipoDocumento,
+                    Sexo = data.Sexo
+                }
+            };
+
+            var rawResponse =
+                await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+
+            var proveedorData =
+                JsonSerializer.Deserialize<ProveedorResponseDto>(rawResponse)
+                ?? throw new Exception("Respuesta inválida del proveedor");
+
+            if (!proveedorData.Authorizations.Any())
+                return await CrearRespuestaError(2);
+
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(1);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Respuesta = proveedorData.Authorizations.Select(a => new LegacyAutorizacionDto
+                {
+                    Date = a.Date,
+                    Merchant_Name = a.Merchant_Name,
+                    Amount = a.Amount,
+                    Currency = a.Currency == "USD" ? "U$S" : a.Currency,
+                    Reference = a.Reference
+                }).ToList()
+            };
+        }
+
+        private async Task<LegacyTransaccionesResponseDto> CrearRespuestaError(int codigo)
+        {
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(codigo);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Respuesta = 0
+            };
+        }
+    }
+}
+
+
+
