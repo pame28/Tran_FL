@@ -1,0 +1,161 @@
+using System.Text.Json;
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+using static transacciones_flotantes.DTOs.Response.ResponseDto;
+using static transacciones_flotantes.DTOs.TransaccionesFlotantes.ProveedorTransaccionesFlotantesResponseDto;
+
+namespace transacciones_flotantes.Service
+{
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+    {
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ICatalogoErroresRepository catalogoErrores)
+        {
+            _repository = repository;
+            _proveedorClient = proveedorClient;
+            _catalogoErrores = catalogoErrores;
+        }
+
+        public async Task<LegacyTransaccionesResponseDto> ProcesarAsync(
+            TransaccionesFlotantesRequestDto request)
+        {
+            var data =
+                await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+            if (data == null)
+                return await CrearRespuestaError(2);
+
+            var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+            {
+                Card = new()
+                {
+                    Bin = data.Bin,
+                    UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                },
+                Client = new()
+                {
+                    NumeroDocumento = data.NumeroDocumento,
+                    TipoDocumento = data.TipoDocumento,
+                    Sexo = data.Sexo
+                }
+            };
+
+            var rawResponse =
+                await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+
+            var proveedorData =
+                JsonSerializer.Deserialize<ProveedorResponseDto>(rawResponse)
+                ?? throw new Exception("Respuesta inválida del proveedor");
+
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(1);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Total_Floating =
+                {
+                    Total_HNL = proveedorData.Total_Floating.Total_HNL.ToString("0.##"),
+                    Total_USD = proveedorData.Total_Floating.Total_USD.ToString("0.##")
+                },
+                Respuesta = proveedorData.Authorizations.Select(a => new LegacyAutorizacionDto
+                {
+                    Date = a.Date,
+                    Merchant_Name = a.Merchant_Name,
+                    Amount = a.Amount,
+                    Currency = a.Currency,
+                    Reference = a.Reference,
+                    Transaction_Type = a.Transaction_Type
+                }).ToList()
+            };
+        }
+
+        private async Task<LegacyTransaccionesResponseDto> CrearRespuestaError(int codigo)
+        {
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(codigo);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Respuesta = new()
+            };
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+using Microsoft.AspNetCore.Mvc;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Controllers.TransaccionesFlotantes
+{
+    [ApiController]
+    [Route("api/transacciones-flotantes")]
+    public class TransaccionesFlotantesController : ControllerBase
+    {
+        private readonly ITransaccionesFlotantesService _service;
+        private readonly ILogger<TransaccionesFlotantesController> _logger;
+
+        public TransaccionesFlotantesController(
+            ITransaccionesFlotantesService service,
+            ILogger<TransaccionesFlotantesController> logger)
+        {
+            _service = service;
+            _logger = logger;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Procesar(
+            [FromBody] TransaccionesFlotantesRequestDto request)
+        {
+            try
+            {
+                var response = await _service.ProcesarAsync(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error no controlado en transacciones flotantes");
+
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        codigo = 500,
+                        mensaje = ex.Message,
+                        detalle = ex.InnerException?.Message
+                    });
+            }
+        }
+    }
+}
+
+
+
