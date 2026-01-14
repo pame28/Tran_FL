@@ -1,0 +1,365 @@
+using Dapper;
+using Microsoft.Data.SqlClient;
+using System.Data;
+using transacciones_flotantes.Models.CatalogoErrores;
+using transacciones_flotantes.Repository.Interface;
+
+namespace transacciones_flotantes.Repository
+{
+    public class CatalogoErroresRepository : ICatalogoErroresRepository
+    {
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<CatalogoErroresRepository> _logger;
+
+        public CatalogoErroresRepository(
+            IConfiguration configuration,
+            ILogger<CatalogoErroresRepository> logger)
+        {
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<CatalogoResponse> GetCatalogoResponseAsync(int codigo)
+        {
+            try
+            {
+                using var connection =
+                    new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+                var result = await connection.QueryFirstOrDefaultAsync<CatalogoResponse>(
+                    "SP_GetCatalogoResponse",
+                    new { error_code = codigo },
+                    commandType: CommandType.StoredProcedure);
+
+                _logger.LogInformation(
+                    "Respuesta del catalogo cod:{Codigo} - {Descripcion}",
+                    codigo,
+                    result?.Descripcion
+                );
+
+                return result ?? new CatalogoResponse
+                {
+                    Codigo = 99,
+                    Descripcion = "Código de error no catalogado"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener los datos del error");
+                return new CatalogoResponse
+                {
+                    Codigo = 99,
+                    Descripcion = "Error interno del sistema"
+                };
+            }
+        }
+
+        public Task<string> ObtenerDescripcionAsync(string codigoError)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+using System.Data;
+using Microsoft.Data.SqlClient;
+using Dapper;
+using transacciones_flotantes.Models.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+
+
+namespace transacciones_flotantes.Repository
+{
+    public class TransaccionFlotanteRepository : ITransaccionFlotanteRepository
+    {
+        private readonly IConfiguration _configuration;
+
+        public TransaccionFlotanteRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<TransaccionFlotanteProveedorDataModel?>
+            ObtenerDatosProveedorAsync(string counterpartCard)
+        {
+            using var connection =
+                new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+
+            return await connection.QueryFirstOrDefaultAsync<
+                TransaccionFlotanteProveedorDataModel>(
+                "sp_ObtenerDatosTransaccionFlotante",
+                new { CounterpartCard = counterpartCard },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+    }
+}
+
+
+
+
+
+
+
+
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Service
+{
+    public class ProveedorApiClient : IProveedorApiClient
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IProveedorTokenService _tokenService;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProveedorApiClient> _logger;
+
+        public ProveedorApiClient(HttpClient httpClient, IProveedorTokenService tokenService,
+            IConfiguration configuration, ILogger<ProveedorApiClient> logger)
+        {
+            _httpClient = httpClient;
+            _tokenService = tokenService;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<string> EnviarTransaccionAsync(ProveedorTransaccionFlotanteRequestDto request)
+        {
+            var token = await _tokenService.ObtenerAccessTokenAsync();
+
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, _configuration["Proveedor:TransaccionesUrl"]);
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            httpRequest.Content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
+
+            _logger.LogInformation("Enviando request al proveedor simulado");
+            var response = await _httpClient.SendAsync(httpRequest);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadAsStringAsync();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+using System.Text.Json;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Service
+{
+    public class ProveedorTokenService : IProveedorTokenService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProveedorTokenService> _logger;
+
+        private string? _token;
+        private DateTime _expiracion;
+
+        public ProveedorTokenService(HttpClient httpClient, IConfiguration configuration, ILogger<ProveedorTokenService> logger)
+        {
+            _httpClient = httpClient;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<string> ObtenerAccessTokenAsync()
+        {
+            if (!string.IsNullOrEmpty(_token) && DateTime.UtcNow < _expiracion.AddSeconds(-10))
+                return _token;
+
+            _logger.LogInformation("Solicitando nuevo access token al proveedor (simulación)");
+
+            // Simulamos request al endpoint de token
+            var response = await _httpClient.PostAsync(_configuration["Proveedor:TokenUrl"],
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    { "client_id", _configuration["Proveedor:ClientId"] },
+                    { "client_secret", _configuration["Proveedor:ClientSecret"] },
+                    { "grant_type", "client_credentials" }
+                })
+            );
+
+            response.EnsureSuccessStatusCode();
+
+            var json = await response.Content.ReadAsStringAsync();
+            var tokenResponse = JsonSerializer.Deserialize<JsonElement>(json);
+
+            _token = tokenResponse.GetProperty("access_token").GetString();
+            var expiresIn = tokenResponse.GetProperty("expires_in").GetInt32();
+            _expiracion = DateTime.UtcNow.AddMilliseconds(expiresIn * 0.8); // refresca 10% antes
+
+            return _token!;
+        }
+    }
+}
+
+
+
+
+
+
+using System.Text.Json;
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+using static transacciones_flotantes.DTOs.Response.ResponseDto;
+using static transacciones_flotantes.DTOs.TransaccionesFlotantes.ProveedorTransaccionesFlotantesResponseDto;
+
+namespace transacciones_flotantes.Service
+{
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+    {
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ICatalogoErroresRepository catalogoErrores)
+        {
+            _repository = repository;
+            _proveedorClient = proveedorClient;
+            _catalogoErrores = catalogoErrores;
+        }
+
+        public async Task<LegacyTransaccionesResponseDto> ProcesarAsync(
+            TransaccionesFlotantesRequestDto request)
+        {
+            var data =
+                await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+            if (data == null)
+                return await CrearRespuestaError(2);
+
+            var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+            {
+                Card = new()
+                {
+                    Bin = data.Bin,
+                    UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                },
+                Client = new()
+                {
+                    NumeroDocumento = data.NumeroDocumento,
+                    TipoDocumento = data.TipoDocumento,
+                    Sexo = data.Sexo
+                }
+            };
+
+            var rawResponse =
+                await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+
+            var proveedorData =
+                JsonSerializer.Deserialize<ProveedorResponseDto>(rawResponse)
+                ?? throw new Exception("Respuesta inválida del proveedor");
+
+            if (!proveedorData.Authorizations.Any())
+                return await CrearRespuestaError(2);
+
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(1);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Respuesta = proveedorData.Authorizations.Select(a => new LegacyAutorizacionDto
+                {
+                    Date = a.Date,
+                    Merchant_Name = a.Merchant_Name,
+                    Amount = a.Amount,
+                    Currency = a.Currency == "USD" ? "U$S" : a.Currency,
+                    Reference = a.Reference
+                }).ToList()
+            };
+        }
+
+        private async Task<LegacyTransaccionesResponseDto> CrearRespuestaError(int codigo)
+        {
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(codigo);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Respuesta = 0
+            };
+        }
+    }
+}
+
+
+
+
+
+
+
+
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Controllers.TransaccionesFlotantes
+{
+    // [Route("api/[controller]")]
+
+    [ApiController]
+    [Route("api/transacciones-flotantes")]
+    public class TransaccionesFlotantesController : ControllerBase
+    {
+        private readonly ITransaccionesFlotantesService _service;
+        private readonly ILogger<TransaccionesFlotantesController> _logger;
+
+        public TransaccionesFlotantesController(
+            ITransaccionesFlotantesService service,
+            ILogger<TransaccionesFlotantesController> logger)
+        {
+            _service = service;
+            _logger = logger;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Procesar(
+     [FromBody] TransaccionesFlotantesRequestDto request)
+        {
+            try
+            {
+                var response = await _service.ProcesarAsync(request);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error no controlado");
+                return StatusCode(500, new
+                {
+                    codigo = 500,
+                    mensaje = ex.Message
+                });
+            }
+        }
+    }
+}
