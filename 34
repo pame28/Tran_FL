@@ -1,0 +1,176 @@
+bool EsTarjetaMigrada(string counterpartCard);
+
+
+
+
+
+
+
+
+public bool EsTarjetaMigrada(string counterpartCard)
+{
+    using var connection = new SqlConnection(_connectionString);
+
+    return connection.QueryFirstOrDefault<bool>(
+        "SP_ValidarTarjetaMigrada",
+        new { counterpart_card = counterpartCard },
+        commandType: CommandType.StoredProcedure
+    );
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+public interface ITransaccionesFlotantesClient
+{
+    Task<Response<List<AuthorizationResponseDto>>> ObtenerAsync(RequestDto request);
+}
+
+
+
+
+
+
+
+public class TransaccionesFlotantesClient : ITransaccionesFlotantesClient
+{
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<TransaccionesFlotantesClient> _logger;
+
+    public TransaccionesFlotantesClient(
+        HttpClient httpClient,
+        ILogger<TransaccionesFlotantesClient> logger)
+    {
+        _httpClient = httpClient;
+        _logger = logger;
+    }
+
+    public async Task<Response<List<AuthorizationResponseDto>>> ObtenerAsync(RequestDto request)
+    {
+        _logger.Info("Consumiento microservicio de transacciones flotantes");
+
+        var response = await _httpClient.PostAsJsonAsync(
+            "/api/transacciones-flotantes",
+            request);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+            .ReadFromJsonAsync<Response<List<AuthorizationResponseDto>>>()!;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+[HttpPost]
+public async Task<IActionResult> BXIRegistrosCongeladosAsync(
+    [FromBody] RequestDto requestDto)
+{
+    LogicalThreadContext.Properties["activityid"] = _uuid;
+
+    _logger.Info("***** BXIRegistrosCongeladosAsync *****");
+    _logger.Info($"Equivalente: {requestDto.counterpart_card} | Canal: {requestDto.channel}");
+
+    try
+    {
+        // ===============================
+        // VALIDAR SI TARJETA ESTÁ MIGRADA
+        // ===============================
+        _logger.Info("Validando si la tarjeta está migrada");
+
+        bool esMigrada = _repo.EsTarjetaMigrada(requestDto.counterpart_card);
+
+        if (esMigrada)
+        {
+            _logger.Info("Tarjeta migrada, consumiendo microservicio");
+
+            var responseMicroservicio =
+                await _transaccionesFlotantesClient.ObtenerAsync(requestDto);
+
+            _logger.Info("Respuesta obtenida desde microservicio");
+            return Ok(responseMicroservicio);
+        }
+
+        // ===============================
+        // FLUJO LEGACY (NO MIGRADA)
+        // ===============================
+
+        CatalogoResponseDto catalogoResponseDto;
+        List<AuthorizationResponseDto> lstAuthorizationDto = new();
+
+        Client cliente = _repo.GetClient(requestDto.counterpart_card);
+        if (cliente.document_number == "-1")
+        {
+            _logger.Debug("No se encontró informacion de cliente");
+
+            var catalogo = _repo.GetCatalogoResponse(2);
+            catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(catalogo);
+
+            return Ok(new Response<int>(catalogoResponseDto, 0));
+        }
+
+        Card card = _repo.GetCard(requestDto.counterpart_card);
+        if (card.bin == "-1")
+        {
+            _logger.Debug("No se encontró informacion de tarjeta");
+
+            var catalogo = _repo.GetCatalogoResponse(2);
+            catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(catalogo);
+
+            return Ok(new Response<int>(catalogoResponseDto, 0));
+        }
+
+        // TOKEN
+        _logger.Info("Obteniendo token");
+
+        Token token = await ObtenerTokenAsync();
+
+        // REGISTROS
+        var lstRegistros = await _repo.GetAll(card, cliente, token.access_token);
+
+        if (!lstRegistros.IsNullOrEmpty())
+        {
+            var catalogo = _repo.GetCatalogoResponse(1);
+            catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(catalogo);
+
+            foreach (var item in lstRegistros)
+                lstAuthorizationDto.Add(
+                    _mapper.Map<AuthorizationResponseDto>(item));
+
+            return Ok(
+                new Response<List<AuthorizationResponseDto>>(
+                    catalogoResponseDto,
+                    lstAuthorizationDto));
+        }
+
+        var catalogoNoData = _repo.GetCatalogoResponse(2);
+        catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(catalogoNoData);
+
+        return Ok(new Response<int>(catalogoResponseDto, 0));
+    }
+    catch (Exception ex)
+    {
+        _logger.Error("Error en BXIRegistrosCongeladosAsync", ex);
+        return StatusCode(500, ex.Message);
+    }
+}
+
+
+
+
