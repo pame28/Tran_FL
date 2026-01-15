@@ -1,0 +1,10 @@
+Hay un cambio que me están solicitando realizar en el microservicio, y es el tema de las monedas, segun la ISO lo correcto es que se usen HNL, USD y asi sucesivamente, pero hay varias formas en que actualmente se está manejando, para eso quieren que yo cree una tabla para parametrizarlo, y poder mapearlo, pero cuando eso se solucion segun la ISO ese mapeo ya no será necesario, y quieren que contemple es escenario, yo pensaba en tal vez usar algun flag, pero no se que piensas tu ?
+
+
+
+Actualmente la api devuelve asi:
+
+      "currency": "LOC",
+
+
+Pero recuerda que, en el microservicio mi proiveedor me devuelve HNL, pero a pesar de.. yo tengo que mostrar LOC
