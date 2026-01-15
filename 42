@@ -1,0 +1,35 @@
+No está mal pero tiene un response con mas cosas ahora
+
+	
+Response body
+Download
+{
+  "result": {
+    "codigo": 1,
+    "descripcion": "True"
+  },
+  "respuesta": [
+    {
+      "result": {
+        "date": "2026-01-15T20:55:00",
+        "merchant_Name": "WALMART BOULEVARD DEL NOR",
+        "amount": 300,
+        "currency": "LOC",
+        "reference": "123456",
+        "transaction_Type": ""
+      },
+      "id": 194,
+      "exception": null,
+      "status": 5,
+      "isCanceled": false,
+      "isCompleted": true,
+      "isCompletedSuccessfully": true,
+      "creationOptions": 0,
+      "asyncState": null,
+      "isFaulted": false
+    }
+  ]
+}
+
+
+lo que esta debajo de la respuesta quitalo
