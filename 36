@@ -1,0 +1,252 @@
+using APIBPTarjetas.Models;
+
+namespace APIBPTarjetas.Repository.IRepository
+{
+    public interface IAuthorizationResponseRepository
+    {
+        Task<ICollection<AuthorizationResponse>> GetAll(Card card, Client client, string token);
+        Card GetCard(string counterPartCard);
+        Client GetClient(string counterPartCard);
+        Task<Models.Token> GetToken();
+        CatalogoResponse GetCatalogoResponse(int cod);
+        bool EsTarjetaMigrada(string counterpartCard);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+using APIBPTarjetas.Data;
+using APIBPTarjetas.Models;
+using APIBPTarjetas.Repository.IRepository;
+using Dapper;
+using log4net;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Data;
+
+namespace APIBPTarjetas.Repository
+{
+    public class AuthorizationResponseRepository : IAuthorizationResponseRepository
+    {
+        private readonly ApplicationDBContext _bd;
+        private readonly IConfiguration _configuration;
+        private readonly ILog _logger;
+
+        public AuthorizationResponseRepository(
+            ApplicationDBContext bd,
+            IConfiguration configuration,
+            ILog logger)
+        {
+            _bd = bd;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        /* ===============================
+           MÉTODO PRINCIPAL
+           =============================== */
+
+        public async Task<ICollection<AuthorizationResponse>> GetAll(
+            Card card,
+            Client client,
+            string token)
+        {
+            _logger.Info("Serializando tarjeta y cliente");
+
+            var jsonBody = JsonConvert.SerializeObject(new
+            {
+                card,
+                client
+            });
+
+            return await GetCardTransactionsAsync(jsonBody, token);
+        }
+
+        /* ===============================
+           TARJETA
+           =============================== */
+
+        public Card GetCard(string counterPartCard)
+        {
+            try
+            {
+                return _bd.cards
+                    .FromSqlRaw("EXEC SP_GetCardData @Equivalente={0}", counterPartCard)
+                    .AsEnumerable()
+                    .FirstOrDefault() ?? new Card { bin = "-1" };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error al obtener tarjeta", ex);
+                return new Card { bin = "-1" };
+            }
+        }
+
+        /* ===============================
+           CLIENTE
+           =============================== */
+
+        public Client GetClient(string counterPartCard)
+        {
+            try
+            {
+                return _bd.clients
+                    .FromSqlRaw("EXEC SP_GetClientData @Equivalente={0}", counterPartCard)
+                    .AsEnumerable()
+                    .FirstOrDefault() ?? new Client { document_number = "-1" };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error al obtener cliente", ex);
+                return new Client { document_number = "-1" };
+            }
+        }
+
+        /* ===============================
+           TRANSACCIONES API
+           =============================== */
+
+        private async Task<List<AuthorizationResponse>> GetCardTransactionsAsync(
+            string body,
+            string token)
+        {
+            var resultado = new List<AuthorizationResponse>();
+
+            try
+            {
+                string ambiente = _configuration["AmbientePRISMA"];
+                var apiParams = GetApiParams(ambiente, "TRANS");
+
+                using var httpClient = new HttpClient();
+                var request = new HttpRequestMessage(HttpMethod.Post, apiParams.url)
+                {
+                    Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json")
+                };
+
+                httpClient.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await httpClient.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                    return resultado;
+
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var data = JsonConvert.DeserializeObject<ListAuthorizations>(jsonResponse);
+
+                foreach (var item in data.Authorizations)
+                {
+                    if (item.transaction_type.Trim().StartsWith("PAG"))
+                        item.merchant_name = "ABONO A SU CUENTA";
+
+                    if (item.transaction_type.Trim().StartsWith("ADE"))
+                        item.merchant_name = "ADELANTO DE EFECTIVO";
+
+                    resultado.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error al obtener transacciones", ex);
+            }
+
+            return resultado;
+        }
+
+        /* ===============================
+           TOKEN
+           =============================== */
+
+        public async Task<Models.Token> GetToken()
+        {
+            try
+            {
+                string ambiente = _configuration["AmbientePRISMA"];
+                var apiParams = GetApiParams(ambiente, "TOKEN");
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", apiParams.apiKey);
+
+                var response = await client.GetAsync(apiParams.url);
+                if (!response.IsSuccessStatusCode)
+                    return new Models.Token();
+
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject<Models.Token>(json);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error obteniendo token", ex);
+                return new Models.Token();
+            }
+        }
+
+        /* ===============================
+           CATALOGO
+           =============================== */
+
+        public CatalogoResponse GetCatalogoResponse(int cod)
+        {
+            try
+            {
+                return _bd.catalogoResponse
+                    .FromSqlRaw("EXEC SP_GetCatalogoResponse @error_code={0}", cod)
+                    .AsEnumerable()
+                    .FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error catalogo response", ex);
+                return null;
+            }
+        }
+
+        /* ===============================
+           API PARAMS
+           =============================== */
+
+        private ApiParams GetApiParams(string ambiente, string objeto)
+        {
+            return _bd.apiParams
+                .FromSqlRaw(
+                    "EXEC SP_GetAPiParams @ambiente={0}, @objeto={1}",
+                    ambiente,
+                    objeto)
+                .AsEnumerable()
+                .FirstOrDefault();
+        }
+
+        /* ===============================
+           SP EN OTRA BASE DE DATOS
+           =============================== */
+
+        public bool EsTarjetaMigrada(string counterpartCard)
+        {
+            using var connection = new SqlConnection(
+                _configuration.GetConnectionString("MigracionesConnection")
+            );
+
+            return connection.QueryFirstOrDefault<bool>(
+                "SP_ValidarTarjetaMigrada",
+                new { counterpart_card = counterpartCard },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+    }
+}
+
+
+
+
+
+
+
+
