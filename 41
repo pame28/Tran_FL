@@ -1,0 +1,77 @@
+CREATE TABLE MONEDAS_MAPEO (
+    ID_MONEDA INT IDENTITY(1,1) PRIMARY KEY,
+    MONEDA_ORIGEN VARCHAR(10) NOT NULL,
+    MONEDA_SALIDA VARCHAR(10) NOT NULL,
+    ACTIVO BIT NOT NULL DEFAULT 1
+);
+GO
+
+
+
+
+
+
+
+
+INSERT INTO MONEDAS_MAPEO (MONEDA_ORIGEN, MONEDA_SALIDA)
+VALUES 
+('HNL', 'LOC'),
+('USD', 'USD');
+GO
+
+
+
+
+
+
+
+
+public interface ICurrencyService
+{
+    string ResolveCurrency(string isoCurrency);
+}
+
+
+
+
+
+
+
+public class CurrencyService : ICurrencyService
+{
+    private readonly IConfiguration _configuration;
+    private readonly ApplicationDbContext _context;
+
+    public CurrencyService(
+        IConfiguration configuration,
+        ApplicationDbContext context)
+    {
+        _configuration = configuration;
+        _context = context;
+    }
+
+    public string ResolveCurrency(string isoCurrency)
+    {
+        bool useLegacy = _configuration
+            .GetValue<bool>("CurrencyMapping:UseLegacyCurrency");
+
+        if (!useLegacy)
+            return isoCurrency; // FUTURO (ISO puro)
+
+        var mapping = _context.MonedasMapeo
+            .FirstOrDefault(x => x.COD_ISO == isoCurrency && x.ACTIVO);
+
+        return mapping?.COD_LEGACY ?? isoCurrency;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
