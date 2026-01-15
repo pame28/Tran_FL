@@ -1,0 +1,203 @@
+using APIBPTarjetas.Data;
+using APIBPTarjetas.Models;
+using APIBPTarjetas.Repository.IRepository;
+using Dapper;
+using log4net;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Data;
+
+namespace APIBPTarjetas.Repository
+{
+    public class AuthorizationResponseRepository : IAuthorizationResponseRepository
+    {
+        private readonly ApplicationDBContext _bd;
+        private readonly IConfiguration _configuration;
+        private readonly ILog _logger;
+        private readonly string _migradasConnection;
+
+        public AuthorizationResponseRepository(
+            ApplicationDBContext bd,
+            IConfiguration configuration,
+            ILog logger)
+        {
+            _bd = bd;
+            _configuration = configuration;
+            _logger = logger;
+
+            _migradasConnection = _configuration.GetConnectionString("MigradasConnection");
+        }
+
+        // 🔹 VALIDAR TARJETA MIGRADA (OTRA BD)
+        public bool EsTarjetaMigrada(string counterpartCard)
+        {
+            using var connection = new SqlConnection(_migradasConnection);
+
+            return connection.QueryFirstOrDefault<bool>(
+                "SP_ValidarTarjetaMigrada",
+                new { counterpart_card = counterpartCard },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+
+        // 🔹 TODO LO DEMÁS QUEDA IGUAL (NO SE TOCA)
+        public Client GetClient(string counterPartCard)
+        {
+            try
+            {
+                var client = _bd.clients
+                    .FromSqlRaw("EXEC SP_GetClientData @Equivalente={0}", counterPartCard)
+                    .ToList();
+
+                return client.First();
+            }
+            catch
+            {
+                return new Client { document_number = "-1" };
+            }
+        }
+
+        public Card GetCard(string counterPartCard)
+        {
+            try
+            {
+                var cards = _bd.cards
+                    .FromSqlRaw("EXEC SP_GetCardData @Equivalente={0}", counterPartCard)
+                    .ToList();
+
+                return cards.First();
+            }
+            catch
+            {
+                return new Card { bin = "-1" };
+            }
+        }
+
+        // resto del código SIN CAMBIOS
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+using Newtonsoft.Json;
+using System.Text;
+
+public class MicroservicioClient
+{
+    private readonly HttpClient _httpClient;
+    private readonly IConfiguration _configuration;
+
+    public MicroservicioClient(HttpClient httpClient, IConfiguration configuration)
+    {
+        _httpClient = httpClient;
+        _configuration = configuration;
+    }
+
+    public async Task<Response<List<AuthorizationResponseDto>>> ConsultarAsync(object request)
+    {
+        var url = _configuration["Microservicio:Url"];
+
+        var json = JsonConvert.SerializeObject(request);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync(url, content);
+        var result = await response.Content.ReadAsStringAsync();
+
+        return JsonConvert.DeserializeObject<Response<List<AuthorizationResponseDto>>>(result);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+[HttpPost]
+public async Task<IActionResult> BXIRegistrosCongeladosAsync(
+    [FromBody] RequestDto requestDto)
+{
+    _logger.Info("***** BXIRegistrosCongeladosAsync *****");
+
+    // 🔹 1. Validar si la tarjeta es migrada
+    bool esMigrada = _repo.EsTarjetaMigrada(requestDto.counterpart_card);
+
+    // 🔹 2. SI ES MIGRADA → MICROSERVICIO
+    if (esMigrada)
+    {
+        _logger.Info("Tarjeta MIGRADA, consumiendo microservicio");
+
+        var microResponse =
+            await _microservicioClient.ConsultarAsync(requestDto);
+
+        return Ok(microResponse);
+    }
+
+    // 🔹 3. SI NO ES MIGRADA → FLUJO ACTUAL (NO SE TOCA)
+    _logger.Info("Tarjeta NO migrada, usando flujo local");
+
+    CatalogoResponseDto catalogoResponseDto;
+    List<AuthorizationResponseDto> lstAuthorizationDto = new();
+
+    Client cliente = _repo.GetClient(requestDto.counterpart_card);
+    if (cliente.document_number == "-1")
+    {
+        catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(
+            _repo.GetCatalogoResponse(2));
+
+        return Ok(new Response<int>(catalogoResponseDto, 0));
+    }
+
+    Card card = _repo.GetCard(requestDto.counterpart_card);
+    if (card.bin == "-1")
+    {
+        catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(
+            _repo.GetCatalogoResponse(2));
+
+        return Ok(new Response<int>(catalogoResponseDto, 0));
+    }
+
+    var token = await ObtenerTokenAsync();
+    var lstRegistros = await _repo.GetAll(card, cliente, token);
+
+    if (!lstRegistros.Any())
+    {
+        catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(
+            _repo.GetCatalogoResponse(2));
+
+        return Ok(new Response<int>(catalogoResponseDto, 0));
+    }
+
+    catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(
+        _repo.GetCatalogoResponse(1));
+
+    foreach (var item in lstRegistros)
+        lstAuthorizationDto.Add(_mapper.Map<AuthorizationResponseDto>(item));
+
+    return Ok(new Response<List<AuthorizationResponseDto>>(
+        catalogoResponseDto,
+        lstAuthorizationDto));
+}
+
