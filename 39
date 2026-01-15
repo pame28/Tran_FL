@@ -1,37 +1,27 @@
-USE [BPTarjetas]
-GO
-/****** Object:  StoredProcedure [dbo].[usp_EsTarjetaMigrada]    Script Date: 15/1/2026 08:48:43 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-/*=====================================================================================
-Autor:				Carlos Aguilar
-Fecha creación:		08/01/2026
-Descripción:		Validar si la tarjeta es migrada o no
-****************************************************************************************
-						HISTORIAL DE MODIFICACIONES
-****************************************************************************************
-Nombre:				Descripcion												Fecha
-=======================================================================================*/
-ALTER PROCEDURE [dbo].[usp_EsTarjetaMigrada](@Equivalente VARCHAR(16))
-AS
-BEGIN
-	SET NOCOUNT ON;
-	
-	SELECT
-		CASE 
-			WHEN P.EsMigrado IS NULL THEN 0
-			ELSE 1
-		END AS RESULTADO
-	FROM ParBINProducto P
-	INNER JOIN ETarjetas E ON E.BinTarjeta = p.BIN
-	WHERE e.NumeroTarjeta = @Equivalente
-		
-END;
+public bool EsTarjetaMigrada(string counterpartCard)
+{
+    try
+    {
+        using var connection = new SqlConnection(_migradasConnection);
 
+        var resultado = connection.QueryFirstOrDefault<int>(
+            "usp_EsTarjetaMigrada",
+            new { Equivalente = counterpartCard },
+            commandType: CommandType.StoredProcedure
+        );
 
+        _logger.Info($"Tarjeta {counterpartCard} migrada: {(resultado == 1)}");
 
+        return resultado == 1;
+    }
+    catch (Exception ex)
+    {
+        _logger.Error(
+            $"Error al validar si la tarjeta {counterpartCard} es migrada. Se continúa flujo legacy.",
+            ex
+        );
 
-
-ESTE ES EL STORED PROCEDURE AL QUE DEBIAMOS ADAPTARNOS, DIME QUE MODIFICO
+        // 🔒 Fail-safe bancario: si falla la validación → legacy
+        return false;
+    }
+}
