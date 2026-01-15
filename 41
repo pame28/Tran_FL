@@ -1,67 +1,8 @@
-CREATE TABLE MONEDAS_MAPEO (
-    ID_MONEDA INT IDENTITY(1,1) PRIMARY KEY,
-    MONEDA_ORIGEN VARCHAR(10) NOT NULL,
-    MONEDA_SALIDA VARCHAR(10) NOT NULL,
-    ACTIVO BIT NOT NULL DEFAULT 1
-);
-GO
-
-
-
-
-
-
-
-
-INSERT INTO MONEDAS_MAPEO (MONEDA_ORIGEN, MONEDA_SALIDA)
-VALUES 
-('HNL', 'LOC'),
-('USD', 'USD');
-GO
-
-
-
-
-
-
-
-
-public interface ICurrencyService
+namespace transacciones_flotantes.Repository.Interface
 {
-    string ResolveCurrency(string isoCurrency);
-}
-
-
-
-
-
-
-
-public class CurrencyService : ICurrencyService
-{
-    private readonly IConfiguration _configuration;
-    private readonly ApplicationDbContext _context;
-
-    public CurrencyService(
-        IConfiguration configuration,
-        ApplicationDbContext context)
+    public interface ICurrencyRepository
     {
-        _configuration = configuration;
-        _context = context;
-    }
-
-    public string ResolveCurrency(string isoCurrency)
-    {
-        bool useLegacy = _configuration
-            .GetValue<bool>("CurrencyMapping:UseLegacyCurrency");
-
-        if (!useLegacy)
-            return isoCurrency; // FUTURO (ISO puro)
-
-        var mapping = _context.MonedasMapeo
-            .FirstOrDefault(x => x.COD_ISO == isoCurrency && x.ACTIVO);
-
-        return mapping?.COD_LEGACY ?? isoCurrency;
+        Task<string?> ObtenerMonedaLegacyAsync(string codigoIso);
     }
 }
 
@@ -71,6 +12,96 @@ public class CurrencyService : ICurrencyService
 
 
 
+using Dapper;
+using Microsoft.Data.SqlClient;
+using System.Data;
+using transacciones_flotantes.Repository.Interface;
+
+namespace transacciones_flotantes.Repository
+{
+    public class CurrencyRepository : ICurrencyRepository
+    {
+        private readonly IConfiguration _configuration;
+
+        public CurrencyRepository(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public async Task<string?> ObtenerMonedaLegacyAsync(string codigoIso)
+        {
+            using var connection = new SqlConnection(
+                _configuration.GetConnectionString("DefaultConnection"));
+
+            return await connection.QueryFirstOrDefaultAsync<string>(
+                @"SELECT CodigoLegacy 
+                  FROM Monedas_Mapeo 
+                  WHERE CodigoISO = @CodigoISO",
+                new { CodigoISO = codigoIso },
+                commandType: CommandType.Text
+            );
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+namespace transacciones_flotantes.Service.Interface
+{
+    public interface ICurrencyService
+    {
+        Task<string> ResolverAsync(string monedaIso);
+    }
+}
+
+
+
+
+
+
+
+
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Service
+{
+    public class CurrencyService : ICurrencyService
+    {
+        private readonly ICurrencyRepository _repository;
+        private readonly IConfiguration _configuration;
+
+        public CurrencyService(ICurrencyRepository repository, IConfiguration configuration)
+        {
+            _repository = repository;
+            _configuration = configuration;
+        }
+
+        public async Task<string> ResolverAsync(string monedaIso)
+        {
+            if (string.IsNullOrWhiteSpace(monedaIso))
+                return monedaIso;
+
+            bool usarMapeo = _configuration.GetValue<bool>("CurrencyMapping:Enabled");
+
+            if (!usarMapeo)
+                return monedaIso;
+
+            var legacy = await _repository.ObtenerMonedaLegacyAsync(monedaIso);
+
+            return legacy ?? monedaIso;
+        }
+    }
+}
 
 
 
