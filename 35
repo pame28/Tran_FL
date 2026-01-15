@@ -1,0 +1,245 @@
+me tira error aqui 
+using APIBPTarjetas.Data;
+using APIBPTarjetas.Models;
+using APIBPTarjetas.Repository.IRepository;
+using log4net;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using System.Data;
+using System.Net;
+
+namespace APIBPTarjetas.Repository
+{
+    public class AuthorizationResponseRepository : IAuthorizationResponseRepository
+    {
+        private readonly ApplicationDBContext _bd;
+        private List<AuthorizationResponse> _lstAuths;
+		private readonly IConfiguration _configuration;
+		private readonly ILog _logger;
+
+        public AuthorizationResponseRepository(ApplicationDBContext bd,IConfiguration configuration, ILog logger)
+        {
+            _bd = bd;
+            _configuration = configuration;
+            _logger = logger;
+            _logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        }
+
+
+        public async Task<ICollection<AuthorizationResponse>> GetAll( Card card, Client client, string token)
+        {
+            _logger.Info($"Serializando los objetos tarjeta y cliente");
+            var jsonCard = JsonConvert.SerializeObject(card);
+            var jsonClient = JsonConvert.SerializeObject(client);
+
+            string jsonBody = "{ \"card\":" + jsonCard+ ",\"client\":" + jsonClient+" }";
+
+            _lstAuths = await GetCardTransactionsAsync(jsonBody, token);
+
+            return _lstAuths;
+        }
+
+        public Card GetCard(string counterPartCard)
+        {
+            Card card = new Card();
+            try
+            {
+                _logger.Info($"Obteniendo los datos de la tarjeta");
+                var lstcard = _bd.cards.FromSqlRaw("EXEC SP_GetCardData @Equivalente={0}", counterPartCard).ToList();
+                card = lstcard[0];
+            }
+            catch (Exception ex)
+            {
+                card.bin = "-1";
+                //setLog("GetCard", counterPartCard, ex.ToString());
+                _logger.Error("Error al obtener los datos de la tarjeta",ex);
+            }
+
+            return card;
+        }
+
+        public async Task<List<AuthorizationResponse>> GetCardTransactionsAsync(string rBody, string token)
+        {
+            List<AuthorizationResponse> lstAuths = new List<AuthorizationResponse>();
+            ApiParams apiParams = new ApiParams();
+            try
+            {
+                _logger.Info($"Obteniendo las transacciones de la tarjeta");
+				string Ambiente = _configuration["AmbientePRISMA"].ToString();
+				apiParams = GetApiParams(Ambiente, "TRANS");
+
+                HttpClientHandler httpClientHandler = new HttpClientHandler {
+                   // Proxy = new WebProxy(apiParams.proxy),
+                    //UseProxy = true
+                };
+
+                using var HttpClient = new HttpClient(httpClientHandler);
+
+                string apiUrl = apiParams.url;
+
+                var request = new HttpRequestMessage(HttpMethod.Post, apiUrl);
+
+                request.Content = new StringContent(rBody, System.Text.Encoding.UTF8, "application/json");
+
+                HttpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                _logger.Debug("Ejecutando request");
+                HttpResponseMessage response = await HttpClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+					_logger.Debug("Request ejecutado exitosamente");
+					var jsonResponse = await response.Content.ReadAsStringAsync();
+
+                    ListAuthorizations lstResponse =  JsonConvert.DeserializeObject<ListAuthorizations>( jsonResponse);
+
+                    foreach (AuthorizationResponse item in lstResponse.Authorizations)
+                    {
+                        if (item.transaction_type.Trim()=="PAG LOC" | item.transaction_type.Trim()== "PAG U$S")
+                        {
+                            item.merchant_name = "ABONO A SU CUENTA";
+                        }
+
+						if (item.transaction_type.Trim() == "ADE LOC" | item.transaction_type.Trim() == "ADE U$S")
+						{
+							item.merchant_name = "ADELANTO DE EFECTIVO";
+						}
+
+
+						lstAuths.Add(item);
+                    }
+
+                    var res = await response.Content.ReadAsStringAsync();
+                    return lstAuths;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error al obtener las transacciones", ex);
+                //setLog("GetCardTransactionsAsync", rBody +" "+ token, ex.ToString());
+            }
+            return _lstAuths;
+        }
+
+        public CatalogoResponse GetCatalogoResponse(int cod)
+        {
+            CatalogoResponse catalogoResponse = new CatalogoResponse();
+            
+            try
+            {
+                var response = _bd.catalogoResponse.FromSqlRaw("EXEC SP_GetCatalogoResponse @error_code={0}", cod).ToList();
+                catalogoResponse = response[0];
+				_logger.Info($"Respuesta del catalogo cod:{cod} - {catalogoResponse.Descripcion}");
+			}
+            catch (Exception ex)
+            {
+                //setLog("GetCatalogoResponse", cod.ToString(), ex.ToString());
+                _logger.Error("Error al obtener los datos del error", ex);
+            }
+            return catalogoResponse;
+        }
+
+        public Client GetClient(string counterPartCard)
+        {
+            _logger.Info($"Obteniendo los datos del cliente");
+            try
+            {
+                var client = _bd.clients.FromSqlRaw("EXEC SP_GetClientData @Equivalente={0}", counterPartCard).ToList();
+                return client[0];
+            }
+            catch (Exception ex)
+            {
+                Client client = new Client();
+                client.document_number = "-1";
+                //setLog("GetClient", counterPartCard, ex.ToString());
+                _logger.Error("Error al obtener los datos del cliente", ex);
+                return client;
+            }
+        }
+
+        public async Task<Models.Token> GetToken()
+        {
+            Models.Token token = new Models.Token();
+            ApiParams apiParams = new ApiParams();
+            try
+            {
+                _logger.Info("Obteniendo el token OUATH");
+
+                string Ambiente = _configuration["AmbientePRISMA"].ToString();
+                apiParams = GetApiParams(Ambiente, "TOKEN");
+
+                HttpClientHandler httpClientHandler = new HttpClientHandler
+                {
+                   // Proxy = new WebProxy(apiParams.proxy),
+                    //UseProxy = true
+                };
+
+                string apiUrl = apiParams.url;
+
+                string ApiKey = apiParams.apiKey;
+
+                using var client = new HttpClient(httpClientHandler);
+
+                var request = new HttpRequestMessage(HttpMethod.Get, apiUrl);
+
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", ApiKey);
+
+                _logger.Debug("Enviando request");
+                HttpResponseMessage response = await client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.Debug("Request ejecutado correctamente");
+                    string jsonResponse = await response.Content.ReadAsStringAsync();
+                    return token = JsonConvert.DeserializeObject<Models.Token>(jsonResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error al obtener el token desde el api de Card Transactions",ex);
+                //setLog("GetToken","", ex.ToString());
+            }
+            return token;
+        }
+
+        public ApiParams GetApiParams( string ambiente, string objeto) {
+            ApiParams apiParams = new ApiParams();
+            try
+            {
+                _logger.Debug("Obteniendo parametros");
+                var response = _bd.apiParams.FromSqlRaw("EXEC SP_GetAPiParams @ambiente={0}, @objeto={1}",ambiente,objeto).ToList();
+                apiParams = response[0];
+                return apiParams;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error al obtener los parametros del api ambiente:{ambiente}, objeto:{objeto}", ex);
+                //setLog("GetApiParams", ambiente +" "+ objeto, ex.ToString());
+                return apiParams;
+            }
+        }
+
+
+        public bool EsTarjetaMigrada(string counterpartCard)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            return connection.QueryFirstOrDefault<bool>(
+                "SP_ValidarTarjetaMigrada",
+                new { counterpart_card = counterpartCard },
+                commandType: CommandType.StoredProcedure
+            );
+        }
+
+        public void setLog(string method, string entryParams, string error) {
+            Task.Run(() => {
+                _bd.logs.FromSqlRaw("EXEC SP_setLog @Method={0} @EntriesParams={1} @Error={2}", method, entryParams, error);
+            });
+        }
+    }
+}
+
+
+
+Parece que es la cadena de conexión 
