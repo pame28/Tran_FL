@@ -1,0 +1,124 @@
+Asi está ahorita, no entiendo el error:
+using System.Text.Json;
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+using static transacciones_flotantes.DTOs.Response.ResponseDto;
+using static transacciones_flotantes.DTOs.TransaccionesFlotantes.ProveedorTransaccionesFlotantesResponseDto;
+
+namespace transacciones_flotantes.Service
+{
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+    {
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+        private readonly ILogger<TransaccionesFlotantesService> _logger;
+        private readonly ICurrencyService _currencyService;
+
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ICatalogoErroresRepository catalogoErrores,
+            ILogger<TransaccionesFlotantesService> logger,
+            ICurrencyService currencyService)
+        {
+            _repository = repository;
+            _proveedorClient = proveedorClient;
+            _catalogoErrores = catalogoErrores;
+            _logger = logger;
+            _currencyService = currencyService;
+        }
+        public async Task<LegacyTransaccionesResponseDto> ProcesarAsync(
+            TransaccionesFlotantesRequestDto request)
+        {
+            _logger.LogInformation(
+                "Inicio procesamiento transacciones flotantes");
+
+            try
+            {
+                var data =
+                    await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+
+                if (data == null)
+                {
+                    _logger.LogWarning("Datos del proveedor no encontrados");
+                    return await CrearRespuestaError(2);
+                }
+
+                var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+                {
+                    Card = new()
+                    {
+                        Bin = data.Bin,
+                        UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                    },
+                    Client = new()
+                    {
+                        NumeroDocumento = data.NumeroDocumento,
+                        TipoDocumento = data.TipoDocumento,
+                        Sexo = data.Sexo
+                    }
+                };
+
+                var rawResponse =
+                    await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+
+                var proveedorData =
+                    JsonSerializer.Deserialize<ProveedorResponseDto>(rawResponse)
+                    ?? throw new Exception("Respuesta inválida del proveedor");
+
+                if (!proveedorData.Authorizations.Any())
+                {
+                    _logger.LogWarning("Proveedor respondió sin autorizaciones");
+                    return await CrearRespuestaError(2);
+                }
+
+                _logger.LogInformation(
+                    "Autorizaciones recibidas: {Cantidad}",
+                    proveedorData.Authorizations.Count);
+
+                var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(1);
+
+                return new LegacyTransaccionesResponseDto
+                {
+                    Result =
+            {
+                Codigo = catalogo.Codigo,
+                Descripcion = catalogo.Descripcion
+            },
+                    Respuesta = proveedorData.Authorizations.Select(async a => new LegacyAutorizacionDto
+                    {
+                        Date = a.Date,
+                        Merchant_Name = a.Merchant_Name,
+                        Amount = a.Amount,
+                        // Currency = a.Currency == "USD" ? "U$S" : a.Currency,
+                         Currency = await _currencyService.ResolverAsync(a.Currency),
+                        Reference = a.Reference
+                    }).ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error no controlado en el servicio");
+                throw;
+            }
+        }
+
+        private async Task<LegacyTransaccionesResponseDto> CrearRespuestaError(int codigo)
+        {
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(codigo);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Respuesta = 0
+            };
+        }
+    }
+}
