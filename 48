@@ -1,0 +1,165 @@
+Me solicitaron que realizara una modificación, quieren que agregue un flag, ya que,
+habrá un tiempo en el que todas las tarjetas estarán migradas y no habrá necesidad de verificar si está migrada o no, sino que, directamente deberia
+consumir el microservicio. Me ayudas dandome paso a paso cómo deberia modificar mi controller de RegistrosCongeladosController
+
+using APIBPTarjetas.Models;
+using APIBPTarjetas.Models.Dtos;
+using APIBPTarjetas.Repository;
+using APIBPTarjetas.Repository.IRepository;
+using APIBPTarjetas.Services;
+using AutoMapper;
+using log4net;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
+
+namespace APIBPTarjetas.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class RegistrosCongeladosController : ControllerBase
+    {
+        private readonly IAuthorizationResponseRepository _repo;
+        private readonly IMapper _mapper;
+        private readonly ILog _logger;
+        private string _uuid;
+        private readonly MicroservicioClient _microservicioClient;
+        private System.Runtime.Caching.MemoryCache memoryCache = System.Runtime.Caching.MemoryCache.Default;
+
+        public RegistrosCongeladosController(IAuthorizationResponseRepository repo, IMapper mapper, ILog logger, MicroservicioClient microservicioClient)
+        {
+            _repo = repo;
+            _mapper = mapper;
+            _logger = logger;
+            _logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+            _uuid = Guid.NewGuid().ToString();
+            _microservicioClient = microservicioClient;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> BXIRegistrosCongeladosAsync([FromBody] RequestDto requestDto)
+        {
+            LogicalThreadContext.Properties["activityid"] = _uuid;
+            CatalogoResponseDto catalogoResponseDto = new CatalogoResponseDto();
+            List<AuthorizationResponseDto> lstAuthorizationDto = new List<AuthorizationResponseDto>();
+
+            _logger.Info("***** BXIRegistrosCongeladosAsync *****");
+            _logger.Info($"Equivalente: {requestDto.counterpart_card} | Canal: {requestDto.channel}");
+            bool esMigrada = _repo.EsTarjetaMigrada(requestDto.counterpart_card);
+
+            if (esMigrada)
+            {
+                _logger.Info("Tarjeta MIGRADA, consumiendo microservicio");
+
+                var microResponse =
+                    await _microservicioClient.ConsultarAsync(requestDto);
+
+                return Ok(microResponse);
+            }
+
+
+
+            _logger.Info("Tarjeta NO migrada, usando flujo local");
+
+            CatalogoResponse catalogoResponse = new CatalogoResponse();
+
+
+            try
+            {
+
+
+                //Obtener los datos del cliente
+                Client cliente = _repo.GetClient(requestDto.counterpart_card);
+                if (cliente.document_number == "-1")
+                {
+                    _logger.Debug("No se encontró informacion");
+                    catalogoResponse = _repo.GetCatalogoResponse(2);
+                    catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(catalogoResponse);
+
+                    var response = new Response<int>(catalogoResponseDto, 0);
+                    _logger.Debug($"Respuesta: {StatusCode(StatusCodes.Status200OK, response)}");
+                    return StatusCode(StatusCodes.Status200OK, response);
+                }
+
+                //Obtener los datos de la tarjeta
+                Card card = _repo.GetCard(requestDto.counterpart_card);
+                if (card.bin == "-1")
+                {
+                    _logger.Debug("No se encontró informacion");
+                    catalogoResponse = _repo.GetCatalogoResponse(2);
+                    catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(catalogoResponse);
+
+                    var response = new Response<int>(catalogoResponseDto, 0);
+
+                    _logger.Debug($"Respuesta: {StatusCode(StatusCodes.Status200OK, response)}");
+                    return StatusCode(StatusCodes.Status200OK, response);
+                }
+
+                //Obtener el token
+                _logger.Info("Obtener el token ");
+
+                Token token = new Token();
+
+                _logger.Debug("Consultando si existe un token en cache");
+                if (memoryCache.Contains("BearerCache"))
+                {
+                    _logger.Debug("Existe un token en cache");
+                    token.access_token = memoryCache.Get("BearerCache").ToString() ?? string.Empty;
+                }
+
+                if (string.IsNullOrEmpty(token.access_token) || string.IsNullOrWhiteSpace(token.access_token))
+                {
+                    _logger.Debug("No existe un token en cache");
+                    token = await _repo.GetToken();
+                    apiPrismaMemoryCacheOAUTH(token.access_token, Convert.ToInt32(token.expires_in));
+                }
+
+                TokenDto tokenDto = _mapper.Map<TokenDto>(token);
+
+                //Obtener los registros 
+                var lstRegistros = await _repo.GetAll(card, cliente, tokenDto.access_token);
+
+                if (!lstRegistros.IsNullOrEmpty())
+                {
+                    catalogoResponse = _repo.GetCatalogoResponse(1);
+                    catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(catalogoResponse);
+
+                    foreach (var item in lstRegistros)
+                    {
+                        lstAuthorizationDto.Add(_mapper.Map<AuthorizationResponseDto>(item));
+                    }
+
+                    Response<List<AuthorizationResponseDto>> response = new Response<List<AuthorizationResponseDto>>(catalogoResponseDto, lstAuthorizationDto);
+                    _logger.Debug($"Respuesta: {Ok(response)}");
+                    _logger.Info("Ejecucion exitosa");
+                    return Ok(response);
+                }
+                else
+                {
+                    catalogoResponse = _repo.GetCatalogoResponse(2);
+                    catalogoResponseDto = _mapper.Map<CatalogoResponseDto>(catalogoResponse);
+
+                    var response = new Response<int>(catalogoResponseDto, 0);
+                    _logger.Debug($"Respuesta: {Ok(response)}");
+                    _logger.Info("Ejecucion exitosa");
+                    return Ok(response);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Error en BXIRegistrosCongeladosAsync: ", ex);
+                return BadRequest(ex.Message);
+            }
+        }
+
+        private void apiPrismaMemoryCacheOAUTH(string BearerOAUTH, int BearerOAUTHExpira)
+        {
+            int OAUTHExpira = BearerOAUTHExpira - 1;
+            _logger.Debug($"OAUTHExpira: {OAUTHExpira}");
+
+            memoryCache.Add("BearerCache", BearerOAUTH, DateTimeOffset.Now.AddSeconds(OAUTHExpira));
+        }
+    }
+}
