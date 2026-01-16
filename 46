@@ -1,3 +1,24 @@
+INSERT INTO CatalogoErrores (Codigo, Descripcion)
+VALUES
+(1, 'Transacción exitosa'),
+(2, 'No se encontraron registros'),
+(3, 'Proveedor no disponible'),
+(4, 'Timeout con proveedor'),
+(5, 'Respuesta inválida del proveedor'),
+(6, 'Error al obtener token del proveedor'),
+(7, 'Error de autenticación con proveedor'),
+(99, 'Error no catalogado');
+
+
+
+
+
+
+
+
+
+
+
 using Microsoft.AspNetCore.Mvc;
 using transacciones_flotantes.DTOs.TransaccionesFlotantes;
 using transacciones_flotantes.Service.Interface;
