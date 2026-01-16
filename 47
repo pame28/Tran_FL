@@ -1,0 +1,49 @@
+# ======== Etapa 1: Build ========
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /app
+
+# Copiar archivos de solución y restaurar dependencias
+COPY *.sln .
+COPY src/*.csproj ./src/
+RUN dotnet restore
+
+# Copiar todo el proyecto y publicar
+COPY . .
+WORKDIR /app/src
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+# ======== Etapa 2: Runtime ========
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+
+# Copiar la aplicación publicada
+COPY --from=build /app/publish .
+
+# Exponer los puertos que usa tu API
+EXPOSE 5000
+EXPOSE 5001
+
+# Entrada del contenedor
+ENTRYPOINT ["dotnet", "TuProyecto.dll"]
+
+
+
+
+
+
+
+
+
+
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+
+
+
+
+docker build -t microservicio-flotantes .
+
