@@ -1,0 +1,180 @@
+Tengo un error debido a unos cambios que realicé
+
+
+19-01-2026 07:34:50.083 [13] [Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware - Failed to determine the https port for redirect.
+19-01-2026 07:34:50.090 [13] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+19-01-2026 07:34:50.134 [13] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+19-01-2026 07:34:50.205 [13] [Information] transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController - Request recibido. CounterpartCard: 1758
+19-01-2026 07:34:50.211 [13] [Information] transacciones_flotantes.Service.TransaccionesFlotantesService - Inicio procesamiento
+19-01-2026 07:34:50.236 [13] [Information] transacciones_flotantes.Repository.TransaccionFlotanteRepository - Buscando datos del proveedor para tarjeta terminada en 1758
+19-01-2026 07:34:51.488 [13] [Fatal] transacciones_flotantes.Service.TransaccionesFlotantesService - Error no controlado en servicio
+System.InvalidOperationException: An invalid request URI was provided. Either the request URI must be an absolute URI or BaseAddress must be set.
+   at System.Net.Http.HttpClient.PrepareRequestMessage(HttpRequestMessage request)
+   at System.Net.Http.HttpClient.SendAsync(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+   at transacciones_flotantes.Service.ProveedorTokenService.ObtenerAccessTokenAsync() in C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes\Service\ProveedorTokenService.cs:line 56
+   at transacciones_flotantes.Service.ProveedorApiClient.EnviarTransaccionAsync(ProveedorTransaccionFlotanteRequestDto request) in C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes\Service\ProveedorApiClient.cs:line 31
+   at transacciones_flotantes.Service.TransaccionesFlotantesService.ProcesarAsync(TransaccionesFlotantesRequestDto request) in C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes\Service\TransaccionesFlotantesService.cs:line 68
+19-01-2026 07:34:51.592 [13] [Fatal] transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController - Error 500 no controlado
+System.InvalidOperationException: An invalid request URI was provided. Either the request URI must be an absolute URI or BaseAddress must be set.
+   at System.Net.Http.HttpClient.PrepareRequestMessage(HttpRequestMessage request)
+   at System.Net.Http.HttpClient.SendAsync(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+   at transacciones_flotantes.Service.ProveedorTokenService.ObtenerAccessTokenAsync() in C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes\Service\ProveedorTokenService.cs:line 56
+   at transacciones_flotantes.Service.ProveedorApiClient.EnviarTransaccionAsync(ProveedorTransaccionFlotanteRequestDto request) in C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes\Service\ProveedorApiClient.cs:line 31
+   at transacciones_flotantes.Service.TransaccionesFlotantesService.ProcesarAsync(TransaccionesFlotantesRequestDto request) in C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes\Service\TransaccionesFlotantesService.cs:line 68
+   at transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar(TransaccionesFlotantesRequestDto request) in C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes\Controllers\TransaccionesFlotantes\TransaccionesFlotantesController.cs:line 45
+19-01-2026 07:34:51.611 [13] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor - Executing ObjectResult, writing value of type '<>f__AnonymousType0`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+19-01-2026 07:34:51.630 [13] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Executed action transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes) in 1484.7362ms
+19-01-2026 07:34:51.637 [13] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executed endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+19-01-2026 07:34:51.644 [13] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - 500 null application/json; charset=utf-8 1571.4596ms
+
+
+
+
+
+
+
+"Proveedor": {
+  "TokenUrl": "https://localhost:5001/token", // Simulador de token
+  "TransaccionesUrl": "https://localhost:5002/transacciones" // Simulador de API
+},
+
+
+"FormUrlEncodedContent": {
+  "grant_type": "client_credentials",
+  "client_id": "MI_CLIENT_ID",
+  "client_secret": "MI_SECRET_DE_PRUEBA"
+},
+
+"ApiSettings": {
+  "BaseAddressTransaccionesFlotantes": "https://localhost:5002/",
+  "EndpointTransacciones": "transacciones",
+  "BaseAddressAccessToken": "https://localhost:5001/",
+  "EndpointAccessToken": "token",
+  "AllowInvalidCerts": "true"
+},
+
+
+
+
+
+
+
+--------
+
+
+
+
+using System.Text.Json;
+using transacciones_flotantes.Service.Interface;
+using System.Net.Http;
+using transacciones_flotantes.Models.AccessToken;
+
+namespace transacciones_flotantes.Service
+{
+    public class ProveedorTokenService : IProveedorTokenService
+    {
+        private readonly HttpClient _httpClient;
+        private AccessTokenResponse? _cachedToken;
+        private DateTime _expiresAt;
+        private readonly SemaphoreSlim _lock = new(1, 1);
+        private readonly ILogger<ProveedorTokenService> _logger;
+
+        //Para auth
+        private readonly string granType;
+        private readonly string clientId;
+        private readonly string clientSecret;
+        private readonly string endpoint;
+
+
+        public ProveedorTokenService(
+            HttpClient httpClient,
+            IConfiguration configuration,
+            ILogger<ProveedorTokenService> logger)
+        {
+            _httpClient = httpClient;
+            granType = configuration["FormUrlEncodedContent:grant_type"];
+            clientId = configuration["FormUrlEncodedContent:client_id"];
+            clientSecret = configuration["FormUrlEncodedContent:client_secret"];
+            endpoint = configuration["ApiSettings:EndpointAccessToken"];
+            _logger = logger;
+
+        }
+
+        public async Task<string> ObtenerAccessTokenAsync()
+        {
+            if (_cachedToken != null && DateTime.UtcNow < _expiresAt)
+                return _cachedToken.token;
+
+            await _lock.WaitAsync();
+            try
+            {
+                if (_cachedToken != null && DateTime.Now < _expiresAt)
+                    return _cachedToken.token;
+
+                var form = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("grant_type", granType),
+                    new KeyValuePair<string, string>("client_id", clientId),
+                    new KeyValuePair<string, string>("client_secret", clientSecret)
+                });
+
+                var response = await _httpClient.PostAsync(endpoint, form);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Error en llamada a {Endpoint}. StatusCode: {StatusCode}, Body: {Body}", endpoint, response.StatusCode, errorContent);
+                    return default;
+                }
+
+                _cachedToken = await response.Content.ReadFromJsonAsync<AccessTokenResponse>();
+
+                //Calcular expiración con margen de seguridad
+                var expiresInMs = Math.Max(_cachedToken!.expires_in - 60_000, 10_000);
+                _expiresAt = DateTime.UtcNow.AddMicroseconds(expiresInMs);
+                return _cachedToken.token;
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+    }
+
+}
+
+
+
+
+
+Y se que mi simulador no se adpata a esto:
++
+
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using System.Text.Json;
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.MapPost("/token", async (HttpContext context) =>
+{
+    var response = new
+    {
+        access_token = Guid.NewGuid().ToString("N"),
+        expires_in = 2000,
+        token_type = "Bearer"
+    };
+
+    context.Response.ContentType = "application/json";
+    await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+});
+
+app.Run("https://localhost:5001");
+
+
+
+
+
+Cual creees tu que sea el problema?
