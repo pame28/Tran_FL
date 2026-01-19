@@ -1,0 +1,296 @@
+Mira que sigo teniendo problemas, a pesar de las correcciones:
+
+:29:19.908 [2] [Information] Microsoft.Hosting.Lifetime - Now listening on: http://localhost:5260
+19-01-2026 09:29:20.076 [2] [Information] Microsoft.Hosting.Lifetime - Application started. Press Ctrl+C to shut down.
+19-01-2026 09:29:20.079 [2] [Information] Microsoft.Hosting.Lifetime - Hosting environment: Development
+19-01-2026 09:29:20.080 [2] [Information] Microsoft.Hosting.Lifetime - Content root path: C:\Users\80730.HN\Desktop\Projects\BH-24138 Procesador Regional\transacciones_flotantes\transacciones_flotantes
+19-01-2026 09:29:20.325 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/index.html - null null
+19-01-2026 09:29:20.867 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/index.html - 200 null text/html;charset=utf-8 552.8256ms
+19-01-2026 09:29:20.894 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - null null
+19-01-2026 09:29:20.894 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/_vs/browserLink - null null
+19-01-2026 09:29:20.904 [9] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_framework/aspnetcore-browser-refresh.js - 200 16531 application/javascript; charset=utf-8 14.3522ms
+19-01-2026 09:29:20.962 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/_vs/browserLink - 200 null text/javascript; charset=UTF-8 68.2413ms
+19-01-2026 09:29:21.016 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - null null
+19-01-2026 09:29:21.042 [7] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request finished HTTP/1.1 GET http://localhost:5260/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 25.4736ms
+19-01-2026 09:29:28.654 [10] [Information] Microsoft.AspNetCore.Hosting.Diagnostics - Request starting HTTP/1.1 POST http://localhost:5260/api/transacciones-flotantes - application/json 67
+19-01-2026 09:29:28.667 [10] [Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware - Failed to determine the https port for redirect.
+19-01-2026 09:29:28.675 [10] [Information] Microsoft.AspNetCore.Routing.EndpointMiddleware - Executing endpoint 'transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController.Procesar (transacciones_flotantes)'
+19-01-2026 09:29:28.726 [10] [Information] Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker - Route matched with {action = "Procesar", controller = "TransaccionesFlotantes"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Procesar(transacciones_flotantes.DTOs.TransaccionesFlotantes.TransaccionesFlotantesRequestDto) on controller transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController (transacciones_flotantes).
+19-01-2026 09:29:28.802 [10] [Information] transacciones_flotantes.Controllers.TransaccionesFlotantes.TransaccionesFlotantesController - Request recibido. CounterpartCard: 1758
+19-01-2026 09:29:28.807 [10] [Information] transacciones_flotantes.Service.TransaccionesFlotantesService - Inicio procesamiento
+19-01-2026 09:29:28.836 [10] [Information] transacciones_flotantes.Repository.TransaccionFlotanteRepository - Buscando datos del proveedor para tarjeta terminada en 1758
+19-01-2026 09:29:29.895 [7] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+19-01-2026 09:29:29.902 [7] [Information] transacciones_flotantes.Service.AuthHandler - ***** Petición recibida AuthHandler.SendAsync() *****
+19-01-2026 09:29:29.921 [7] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/token
+19-01-2026 09:29:29.926 [7] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/token
+19-01-2026 09:29:30.090 [19] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 156.5523ms - 200
+19-01-2026 09:29:30.093 [19] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 172.136ms - 200
+
+
+
+
+
+
+
+Me deja en esta liena :  request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.ToString());
+
+
+
+
+
+
+using System.Net.Http.Headers;
+using transacciones_flotantes.Service.Interface;
+
+namespace transacciones_flotantes.Service
+{
+    public class AuthHandler : DelegatingHandler
+    {
+        private readonly IProveedorTokenService _tokenProvider;
+        private readonly ILogger<AuthHandler> _logger;
+        public AuthHandler(IProveedorTokenService tokenProvider, ILogger<AuthHandler> logger)
+        {
+            _tokenProvider = tokenProvider;
+            _logger = logger;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("***** Petición recibida AuthHandler.SendAsync() *****");
+            try
+            {
+                var token = await _tokenProvider.ObtenerAccessTokenAsync();
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.ToString());
+
+                _logger.LogInformation("***** Llamado completado con AuthHandler.SendAsync() *****");
+
+                return await base.SendAsync(request, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en AuthHandler.SendAsync(). Descripcion: {Message}", ex.Message);
+                return new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent($"Error en AuthHandler: {ex.Message}")
+                };
+            }
+
+        }
+    }
+}
+----------------------------------
+
+
+
+
+
+using System.Text.Json;
+using transacciones_flotantes.Service.Interface;
+using System.Net.Http;
+using transacciones_flotantes.Models.AccessToken;
+
+namespace transacciones_flotantes.Service
+{
+    public class ProveedorTokenService : IProveedorTokenService
+    {
+        private readonly HttpClient _httpClient;
+        private AccessTokenResponse? _cachedToken;
+        private DateTime _expiresAt;
+        private readonly SemaphoreSlim _lock = new(1, 1);
+        private readonly ILogger<ProveedorTokenService> _logger;
+
+        //Para auth
+        private readonly string granType;
+        private readonly string clientId;
+        private readonly string clientSecret;
+        private readonly string endpoint;
+
+
+        public ProveedorTokenService(
+            HttpClient httpClient,
+            IConfiguration configuration,
+            ILogger<ProveedorTokenService> logger)
+        {
+            _httpClient = httpClient;
+            granType = configuration["FormUrlEncodedContent:grant_type"];
+            clientId = configuration["FormUrlEncodedContent:client_id"];
+            clientSecret = configuration["FormUrlEncodedContent:client_secret"];
+            endpoint = configuration["ApiSettings:EndpointAccessToken"];
+            _logger = logger;
+
+        }
+
+        public async Task<string> ObtenerAccessTokenAsync()
+        {
+            if (_cachedToken != null && DateTime.UtcNow < _expiresAt)
+                return _cachedToken.token;
+
+            await _lock.WaitAsync();
+            try
+            {
+                if (_cachedToken != null && DateTime.Now < _expiresAt)
+                    return _cachedToken.token;
+
+                var form = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("grant_type", granType),
+                    new KeyValuePair<string, string>("client_id", clientId),
+                    new KeyValuePair<string, string>("client_secret", clientSecret)
+                });
+
+                var response = await _httpClient.PostAsync(endpoint, form);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Error en llamada a {Endpoint}. StatusCode: {StatusCode}, Body: {Body}", endpoint, response.StatusCode, errorContent);
+                    return default;
+                }
+
+                _cachedToken = await response.Content.ReadFromJsonAsync<AccessTokenResponse>();
+
+                //Calcular expiración con margen de seguridad
+                var expiresInMs = Math.Max(_cachedToken!.expires_in - 60_000, 10_000);
+                _expiresAt = DateTime.UtcNow.AddMicroseconds(expiresInMs);
+                return _cachedToken.token;
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+    }
+
+}
+
+
+
+---------------------
+
+
+using Serilog;
+using System.Net.Http.Headers;
+using transacciones_flotantes.Infrastructure.Data;
+using transacciones_flotantes.Repository;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service;
+using transacciones_flotantes.Service.Interface;
+using transacciones_flotantes.Utils;
+
+var builder = WebApplication.CreateBuilder(args);
+
+//Registro api
+var baseAddressToken = builder.Configuration["ApiSettings:BaseAddressAccessToken"];
+
+builder.Services.AddHttpClient<IProveedorTokenService, ProveedorTokenService>(client =>
+{
+    client.BaseAddress = new Uri(baseAddressToken);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+}).ConfigurePrimaryHttpMessageHandler(() =>
+{
+    var allowInvalidCerts = bool.Parse(builder.Configuration["ApiSettings:AllowInvalidCerts"]);
+
+    return new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = allowInvalidCerts
+        ? (message, cert, chain, errors) => true
+        : null
+    };
+});
+
+//Registro de api Transacciones con AuthHandler para envio de token
+var baseAddressTransacciones = builder.Configuration["ApiSettings:BaseAddressTransaccionesFlotantes"];
+builder.Services.AddTransient<AuthHandler>();
+builder.Services.AddHttpClient<IProveedorApiClient, ProveedorApiClient>(client =>
+{
+    client.BaseAddress = new Uri(baseAddressTransacciones);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+}).ConfigurePrimaryHttpMessageHandler(() =>
+{
+    var allowInvalidCerts = bool.Parse(builder.Configuration["ApiSettings:AllowInvalidCerts"]);
+
+    return new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = allowInvalidCerts
+        ? (message, cert, chain, errors) => true
+        : null
+    };
+}).AddHttpMessageHandler<AuthHandler>();
+
+//Caché
+builder.Services.AddMemoryCache();
+
+// Dependency Injection
+
+builder.Services.AddScoped<ICatalogoErroresRepository, CatalogoErroresRepository>();
+builder.Services.AddScoped<IParametrosRepository, ParametrosRepositoryImp>();
+builder.Services.AddScoped<IValidationService, ValidationServiceImp>();
+builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+builder.Services.AddScoped<DBHelper>();
+
+builder.Services.AddScoped<ITransaccionFlotanteRepository,
+    TransaccionFlotanteRepository>();
+
+builder.Services.AddScoped<ITransaccionesFlotantesService,
+    TransaccionesFlotantesService>();
+
+//builder.Services.AddHttpClient<IProveedorTokenService,
+//    ProveedorTokenService>();
+
+//builder.Services.AddHttpClient<IProveedorApiClient,
+//    ProveedorApiClient>();
+
+builder.Services.AddScoped<ICurrencyService, CurrencyService>();
+
+builder.Services.AddHttpClient();
+
+
+// Configuración de Serilog
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithThreadId() // agrega hilo de ejecución
+    .WriteTo.Console(
+        outputTemplate: "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{ThreadId}] [{Level,-5}] {SourceContext} - {Message:lj}{NewLine}{Exception}"
+    )
+    .WriteTo.File(
+        "logs/log-.txt",
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:dd-MM-yyyy HH:mm:ss.fff} [{ThreadId}] [{Level,-5}] {SourceContext} - {Message:lj}{NewLine}{Exception}"
+    )
+    .CreateLogger();
+
+
+builder.Host.UseSerilog();
+
+
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
+
+
+
+----------
+
+
+
