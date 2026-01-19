@@ -1,0 +1,164 @@
+Mira, te voy a mostrar un ejemplo de lo que están haciendo en otro Microservicio para usar el accessToken del proveedor:
+
+
+using ApiPeriods.Service.Interface;
+using Azure;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text.Json;
+
+namespace ApiPeriods.Service
+{
+    public class AuthHandler : DelegatingHandler
+    {
+        private readonly ITokenProvider _tokenProvider;
+        private readonly ILogger<AuthHandler> _logger;
+        public AuthHandler(ITokenProvider tokenProvider, ILogger<AuthHandler> logger)
+        {
+            _tokenProvider = tokenProvider;
+            _logger = logger;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("***** Petición recibida AuthHandler.SendAsync() *****");
+            try
+            {
+                var token = await _tokenProvider.GetTokenAsync();
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.ToString());
+
+                _logger.LogInformation("***** Llamado completado con AuthHandler.SendAsync() *****");
+
+                return await base.SendAsync(request, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error en AuthHandler.SendAsync(). Descripcion: {Message}", ex.Message);
+                return new HttpResponseMessage(System.Net.HttpStatusCode.InternalServerError)
+                {
+                    Content = new StringContent($"Error en AuthHandler: {ex.Message}")
+                };
+            }
+
+        }
+    }
+}
+
+
+
+
+
+Y en el program.cs esta asi:
+
+//Registro de api Payment con AuthHandler para envio de token
+var baseAddressPayment = builder.Configuration["ApiSettings:BaseAddressDivideloTodo"];
+builder.Services.AddTransient<AuthHandler>();
+builder.Services.AddHttpClient<IApiTransaction, ApiTransactionService>(client =>
+{
+    client.BaseAddress = new Uri(baseAddressPayment);
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/json"));
+}).ConfigurePrimaryHttpMessageHandler(() =>
+{
+    var allowInvalidCerts = bool.Parse(builder.Configuration["ApiSettings:AllowInvalidCerts"]);
+
+    return new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = allowInvalidCerts
+        ? (message, cert, chain, errors) => true
+        : null
+    };
+}).AddHttpMessageHandler<AuthHandler>();
+
+//Caché
+builder.Services.AddMemoryCache();
+
+
+
+
+
+
+Yo ya tengo mi Service igual que el del ejemplo que te envié, aso está:
+
+
+using System.Text.Json;
+using transacciones_flotantes.Service.Interface;
+using System.Net.Http;
+using transacciones_flotantes.Models.AccessToken;
+
+namespace transacciones_flotantes.Service
+{
+    public class ProveedorTokenService : IProveedorTokenService
+    {
+        private readonly HttpClient _httpClient;
+        private AccessTokenResponse? _cachedToken;
+        private DateTime _expiresAt;
+        private readonly SemaphoreSlim _lock = new(1, 1);
+        private readonly ILogger<ProveedorTokenService> _logger;
+
+        //Para auth
+        private readonly string granType;
+        private readonly string clientId;
+        private readonly string clientSecret;
+        private readonly string endpoint;
+
+
+        public ProveedorTokenService(
+            HttpClient httpClient,
+            IConfiguration configuration,
+            ILogger<ProveedorTokenService> logger)
+        {
+            _httpClient = httpClient;
+            granType = configuration["FormUrlEncodedContent:grant_type"];
+            clientId = configuration["FormUrlEncodedContent:client_id"];
+            clientSecret = configuration["FormUrlEncodedContent:client_secret"];
+            endpoint = configuration["ApiSettings:BaseAddressAccessToken"];
+            _logger = logger;
+
+        }
+
+        public async Task<string> ObtenerAccessTokenAsync()
+        {
+            if (_cachedToken != null && DateTime.UtcNow < _expiresAt)
+                return _cachedToken.token;
+
+            await _lock.WaitAsync();
+            try
+            {
+                if (_cachedToken != null && DateTime.Now < _expiresAt)
+                    return _cachedToken.token;
+
+                var form = new FormUrlEncodedContent(new[]
+                {
+                    new KeyValuePair<string, string>("grant_type", granType),
+                    new KeyValuePair<string, string>("client_id", clientId),
+                    new KeyValuePair<string, string>("client_secret", clientSecret)
+                });
+
+                var response = await _httpClient.PostAsync(endpoint, form);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("Error en llamada a {Endpoint}. StatusCode: {StatusCode}, Body: {Body}", endpoint, response.StatusCode, errorContent);
+                    return default;
+                }
+
+                _cachedToken = await response.Content.ReadFromJsonAsync<AccessTokenResponse>();
+
+                //Calcular expiración con margen de seguridad
+                var expiresInMs = Math.Max(_cachedToken!.expires_in - 60_000, 10_000);
+                _expiresAt = DateTime.UtcNow.AddMicroseconds(expiresInMs);
+                return _cachedToken.token;
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+    }
+
+}
+
+
+Pero lo que yo no se.. es si necesito crear ese AuthHandler .. y porque
