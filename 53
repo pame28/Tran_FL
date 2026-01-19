@@ -1,0 +1,178 @@
+Tengo el sigueinte error:
+
+758
+19-01-2026 09:07:09.023 [9] [Information] transacciones_flotantes.Service.TransaccionesFlotantesService - Inicio procesamiento
+19-01-2026 09:07:09.024 [9] [Information] transacciones_flotantes.Repository.TransaccionFlotanteRepository - Buscando datos del proveedor para tarjeta terminada en 1758
+19-01-2026 09:07:09.114 [9] [Information] System.Net.Http.HttpClient.IProveedorApiClient.LogicalHandler - Start processing HTTP request POST https://localhost:5002/transacciones
+19-01-2026 09:07:09.126 [9] [Information] transacciones_flotantes.Service.AuthHandler - ***** Petición recibida AuthHandler.SendAsync() *****
+19-01-2026 09:07:09.148 [9] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - Start processing HTTP request POST https://localhost:5001/
+19-01-2026 09:07:09.152 [9] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Sending HTTP request POST https://localhost:5001/
+19-01-2026 09:07:09.315 [17] [Information] System.Net.Http.HttpClient.IProveedorTokenService.ClientHandler - Received HTTP response headers after 154.0429ms - 404
+19-01-2026 09:07:09.322 [17] [Information] System.Net.Http.HttpClient.IProveedorTokenService.LogicalHandler - End processing HTTP request after 173.7229ms - 404
+19-01-2026 09:07:09.330 [17] [Error] transacciones_flotantes.Service.ProveedorTokenService - Error en llamada a https://localhost:5001/. StatusCode: NotFound, Body:
+
+
+
+
+
+Me manda a esta linea: 
+
+
+en el authHandler:     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.ToString());
+
+
+
+
+No se si falta algo en mi servicio:
+
+using System.Text.Json;
+using transacciones_flotantes.DTOs.Response;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+using transacciones_flotantes.Repository.Interface;
+using transacciones_flotantes.Service.Interface;
+using static transacciones_flotantes.DTOs.Response.ResponseDto;
+using static transacciones_flotantes.DTOs.TransaccionesFlotantes.ProveedorTransaccionesFlotantesResponseDto;
+
+namespace transacciones_flotantes.Service
+{
+    public class TransaccionesFlotantesService : ITransaccionesFlotantesService
+    {
+        private readonly ITransaccionFlotanteRepository _repository;
+        private readonly IProveedorApiClient _proveedorClient;
+        private readonly ICatalogoErroresRepository _catalogoErrores;
+        private readonly ILogger<TransaccionesFlotantesService> _logger;
+        private readonly ICurrencyService _currencyService;
+
+        public TransaccionesFlotantesService(
+            ITransaccionFlotanteRepository repository,
+            IProveedorApiClient proveedorClient,
+            ICatalogoErroresRepository catalogoErrores,
+            ILogger<TransaccionesFlotantesService> logger,
+            ICurrencyService currencyService)
+        {
+            _repository = repository;
+            _proveedorClient = proveedorClient;
+            _catalogoErrores = catalogoErrores;
+            _logger = logger;
+            _currencyService = currencyService;
+        }
+
+        public async Task<LegacyTransaccionesResponseDto> ProcesarAsync(
+            TransaccionesFlotantesRequestDto request)
+        {
+            var start = DateTime.UtcNow;
+            _logger.LogInformation("Inicio procesamiento");
+
+            try
+            {
+                var data = await _repository.ObtenerDatosProveedorAsync(request.CounterpartCard);
+                if (data == null)
+                    return await CrearRespuestaError(2, "Datos proveedor no encontrados");
+
+                var proveedorRequest = new ProveedorTransaccionFlotanteRequestDto
+                {
+                    Card = new()
+                    {
+                        Bin = data.Bin,
+                        UltimosCuatroDigitos = data.UltimosCuatroDigitos
+                    },
+                    Client = new()
+                    {
+                        NumeroDocumento = data.NumeroDocumento,
+                        TipoDocumento = data.TipoDocumento,
+                        Sexo = data.Sexo
+                    }
+                };
+
+                _logger.LogDebug(
+                    "Request proveedor: {Json}",
+                    JsonSerializer.Serialize(proveedorRequest));
+
+                string rawResponse;
+
+                try
+                {
+                    rawResponse = await _proveedorClient.EnviarTransaccionAsync(proveedorRequest);
+                }
+                catch (HttpRequestException ex)
+                {
+                    _logger.LogError(ex, "Proveedor no disponible");
+                    return await CrearRespuestaError(3, "Proveedor no disponible");
+                }
+                catch (TaskCanceledException ex)
+                {
+                    _logger.LogError(ex, "Timeout proveedor");
+                    return await CrearRespuestaError(4, "Timeout proveedor");
+                }
+
+                _logger.LogDebug("Response cruda proveedor: {Raw}", rawResponse);
+
+                ProveedorResponseDto proveedorData;
+                try
+                {
+                    proveedorData = JsonSerializer.Deserialize<ProveedorResponseDto>(rawResponse)
+                        ?? throw new Exception("JSON vacío");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "JSON inválido proveedor");
+                    return await CrearRespuestaError(6, "Respuesta inválida proveedor");
+                }
+
+                if (!proveedorData.Authorizations.Any())
+                    return await CrearRespuestaError(2, "Sin autorizaciones");
+
+                var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(1);
+
+                var autorizaciones = await Task.WhenAll(
+                    proveedorData.Authorizations.Select(async a => new LegacyAutorizacionDto
+                    {
+                        Date = a.Date,
+                        Merchant_Name = a.Merchant_Name,
+                        Amount = a.Amount,
+                        Currency = await _currencyService.ResolverAsync(a.Currency),
+                        Reference = a.Reference
+                    }));
+
+                _logger.LogInformation(
+                    "Proceso exitoso. Tiempo: {Ms} ms",
+                    (DateTime.UtcNow - start).TotalMilliseconds);
+
+                return new LegacyTransaccionesResponseDto
+                {
+                    Result =
+                    {
+                        Codigo = catalogo.Codigo,
+                        Descripcion = catalogo.Descripcion
+                    },
+                    Respuesta = autorizaciones.ToList()
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex, "Error no controlado en servicio");
+                throw;
+            }
+        }
+
+        private async Task<LegacyTransaccionesResponseDto> CrearRespuestaError(
+            int codigo, string detalle)
+        {
+            var catalogo = await _catalogoErrores.GetCatalogoResponseAsync(codigo);
+
+            _logger.LogWarning(
+                "Error controlado {Codigo}: {Detalle}",
+                codigo, detalle);
+
+            return new LegacyTransaccionesResponseDto
+            {
+                Result =
+                {
+                    Codigo = catalogo.Codigo,
+                    Descripcion = catalogo.Descripcion
+                },
+                Respuesta = 0
+            };
+        }
+    }
+}
