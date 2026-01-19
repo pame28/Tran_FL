@@ -1,0 +1,68 @@
+using System.Text;
+using System.Text.Json;
+using transacciones_flotantes.DTOs.TransaccionesFlotantes;
+
+namespace transacciones_flotantes.Service
+{
+    public class ProveedorApiClient : IProveedorApiClient
+    {
+        private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProveedorApiClient> _logger;
+
+        public ProveedorApiClient(
+            HttpClient httpClient,
+            IConfiguration configuration,
+            ILogger<ProveedorApiClient> logger)
+        {
+            _httpClient = httpClient;
+            _configuration = configuration;
+            _logger = logger;
+        }
+
+        public async Task<string> EnviarTransaccionAsync(
+            ProveedorTransaccionFlotanteRequestDto request)
+        {
+            try
+            {
+                var baseAddress = _configuration["ApiSettings:BaseAddressTransaccionesFlotantes"];
+                var endpoint = _configuration["ApiSettings:EndpointTransacciones"];
+
+                var url = new Uri(new Uri(baseAddress), endpoint);
+
+                var httpRequest = new HttpRequestMessage(
+                    HttpMethod.Post,
+                    url)
+                {
+                    Content = new StringContent(
+                        JsonSerializer.Serialize(request),
+                        Encoding.UTF8,
+                        "application/json")
+                };
+
+                var response = await _httpClient.SendAsync(httpRequest);
+
+                var body = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("Proveedor HTTP {StatusCode}", response.StatusCode);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError(
+                        "Proveedor error HTTP {StatusCode} - Body: {Body}",
+                        response.StatusCode,
+                        body);
+
+                    throw new HttpRequestException($"Proveedor respondió {response.StatusCode}");
+                }
+
+                return body;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enviando transacción al proveedor");
+                throw;
+            }
+        }
+    }
+}
