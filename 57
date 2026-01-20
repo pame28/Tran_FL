@@ -1,3 +1,16 @@
-Recibe una solicitud con los datos de una tarjeta y valida la información obligatoria.
-Una vez validada, el microservicio obtiene la información adicional del cliente y de la tarjeta desde fuentes internas, genera una solicitud compatible con el proveedor externo, y consulta las transacciones flotantes asociadas a dicha tarjeta.
-La respuesta devuelta al consumidor corresponde a una lista normalizada de transacciones flotantes o un mensaje de error controlado, según el resultado del procesamiento.
+Catálogos del Microservicio
+El microservicio utiliza catálogos internos para estandarizar la información de salida y garantizar consistencia funcional frente a los consumidores.
+Actualmente se manejan dos catálogos principales:
+Catálogo de Monedas
+Catálogo de Errores
+Estos catálogos son consultados durante el procesamiento de la solicitud y forman parte del flujo normal de ejecución.
+Catálogo de Monedas
+Descripción
+El catálogo de monedas permite mapear los códigos de moneda devueltos por el proveedor externo a los códigos estándar utilizados por los sistemas internos del banco.
+El proveedor puede retornar monedas en formatos distintos (códigos numéricos, alfanuméricos o propietarios), por lo que el microservicio realiza una normalización antes de devolver la respuesta al consumidor.
+Este proceso garantiza que todas las transacciones flotantes sean retornadas con un código de moneda consistente y válido.
+Funcionamiento
+El proveedor devuelve un código de moneda por cada transacción.
+El microservicio consulta el catálogo de monedas en base de datos.
+Se obtiene el código interno correspondiente.
+La respuesta al consumidor contiene la moneda ya normalizada.
