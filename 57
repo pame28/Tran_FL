@@ -1,3 +1,3 @@
-Consulta de Transacciones Flotantes
-Este microservicio expone un endpoint HTTP de tipo POST que permite consultar las transacciones flotantes asociadas a una tarjeta específica.
-El endpoint recibe la información mínima necesaria para identificar la tarjeta y el canal de origen, y se encarga de completar internamente los datos requeridos para realizar la consulta al proveedor externo.
+Recibe una solicitud con los datos de una tarjeta y valida la información obligatoria.
+Una vez validada, el microservicio obtiene la información adicional del cliente y de la tarjeta desde fuentes internas, genera una solicitud compatible con el proveedor externo, y consulta las transacciones flotantes asociadas a dicha tarjeta.
+La respuesta devuelta al consumidor corresponde a una lista normalizada de transacciones flotantes o un mensaje de error controlado, según el resultado del procesamiento.
