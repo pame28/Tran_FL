@@ -1,10 +1,3 @@
-El microservicio recibe una solicitud con la tarjeta y datos básicos de la transacción.
-Se validan los campos obligatorios del request (por ejemplo, canal y tarjeta).
-Se consulta información interna para completar los datos del cliente y de la tarjeta.
-Con la información consolidada, se construye la solicitud requerida por el proveedor externo.
-Se obtiene un token de acceso del proveedor utilizando autenticación OAuth.
-El token se agrega al encabezado de autorización de la petición.
-Se envía la solicitud al proveedor de transacciones flotantes.
-El microservicio procesa la respuesta del proveedor.
-Se normaliza la información de transacciones y monedas.
-Se retorna la respuesta final al consumidor del servicio.
+Consulta de Transacciones Flotantes
+Este microservicio expone un endpoint HTTP de tipo POST que permite consultar las transacciones flotantes asociadas a una tarjeta específica.
+El endpoint recibe la información mínima necesaria para identificar la tarjeta y el canal de origen, y se encarga de completar internamente los datos requeridos para realizar la consulta al proveedor externo.
