@@ -1,32 +1,30 @@
-Mira, ya tengo creado el archivo YAML para el deployment, pero creo que tiene algunos errores, dime puntualmente cuales son mis errores.
-
-kind: Deployment
 apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: api_transacciones_flotantes
+spec:
   replicas: 1
   selector:
     matchLabels:
       app: api_transacciones_flotantes
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: api_transacciones_flotantes
-        deployment: api_transacciones_flotantes
     spec:
       containers:
         - name: api_transacciones_flotantes
           image: transacciones_flotantes
-		  imagePullPolicy : Never
-		  
-		  env:
-		    - name: CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION
               valueFrom:
                 secretKeyRef:
                   name: transaccionesflotantes-secrets-prueba-procesadortarjetas
                   key: CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION
-			- name: FORMURLENCODEDCONTENT__CLIENT_SECRET
+            - name: FORMURLENCODEDCONTENT__CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: transaccionesflotantes-secrets-prueba-procesadortarjetas
@@ -71,10 +69,3 @@ metadata:
                 configMapKeyRef:
                   name: transaccionesflotantes-configmap-prueba-procesadortarjetas
                   key: APISETTINGS__ALLOWINVALIDCERTS
-
-
-
-
-
-
-            Consulta, verdad que, cuando yo haga esto del deployment los configmap y secrets ya deberian estar asignados? 
