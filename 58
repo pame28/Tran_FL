@@ -1,0 +1,80 @@
+Mira, ya tengo creado el archivo YAML para el deployment, pero creo que tiene algunos errores, dime puntualmente cuales son mis errores.
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: api_transacciones_flotantes
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api_transacciones_flotantes
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: api_transacciones_flotantes
+        deployment: api_transacciones_flotantes
+    spec:
+      containers:
+        - name: api_transacciones_flotantes
+          image: transacciones_flotantes
+		  imagePullPolicy : Never
+		  
+		  env:
+		    - name: CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION
+              valueFrom:
+                secretKeyRef:
+                  name: transaccionesflotantes-secrets-prueba-procesadortarjetas
+                  key: CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION
+			- name: FORMURLENCODEDCONTENT__CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: transaccionesflotantes-secrets-prueba-procesadortarjetas
+                  key: FORMURLENCODEDCONTENT__CLIENT_SECRET
+            - name: APISETTINGS__BASEADDRESSACCESSTOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+                  key: APISETTINGS__BASEADDRESSACCESSTOKEN
+            - name: APISETTINGS__BASEADDRESSTRANSACCIONESFLOTANTES
+              valueFrom:
+                configMapKeyRef:
+                  name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+                  key: APISETTINGS__BASEADDRESSTRANSACCIONESFLOTANTES
+            - name: APISETTINGS__ENDPOINTACCESSTOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+                  key: APISETTINGS__ENDPOINTACCESSTOKEN
+            - name: APISETTINGS__ENDPOINTTRANSACCIONES
+              valueFrom:
+                configMapKeyRef:
+                  name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+                  key: APISETTINGS__ENDPOINTTRANSACCIONES
+            - name: FORMURLENCODEDCONTENT__CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+                  key: FORMURLENCODEDCONTENT__CLIENT_ID
+            - name: FORMURLENCODEDCONTENT__GRANT_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+                  key: FORMURLENCODEDCONTENT__GRANT_TYPE
+            - name: CURRENCYMAPPING__ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+                  key: CURRENCYMAPPING__ENABLED
+            - name: APISETTINGS__ALLOWINVALIDCERTS
+              valueFrom:
+                configMapKeyRef:
+                  name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+                  key: APISETTINGS__ALLOWINVALIDCERTS
+
+
+
+
+
+
+            Consulta, verdad que, cuando yo haga esto del deployment los configmap y secrets ya deberian estar asignados? 
