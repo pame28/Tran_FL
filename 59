@@ -1,3 +1,13 @@
+oc create secret generic transaccionesflotantes-secrets-prueba-procesadortarjetas \
+  --from-literal=CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION="Server=...;Database=...;" \
+  --from-literal=FORMURLENCODEDCONTENT__CLIENT_SECRET="super-secret"
+
+
+
+
+
+
+
 oc create configmap transaccionesflotantes-configmap-prueba-procesadortarjetas \
   --from-literal=APISETTINGS__BASEADDRESSACCESSTOKEN=https://auth.midominio.com \
   --from-literal=APISETTINGS__BASEADDRESSTRANSACCIONESFLOTANTES=https://api.midominio.com \
