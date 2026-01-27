@@ -1,6 +1,6 @@
 oc create secret generic transaccionesflotantes-secrets-prueba-procesadortarjetas \
-  --from-literal=CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION="Server=...;Database=...;" \
-  --from-literal=FORMURLENCODEDCONTENT__CLIENT_SECRET="super-secret"
+  --from-literal=CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION="Server=10.100.88.17;Database=TransaccionesFlotantes; User Id=api_transaccionesFlotantes;Password=Pfarramt_70000;Integrated Security=false;TrustServerCertificate=True;" \
+  --from-literal=FORMURLENCODEDCONTENT__CLIENT_SECRET="MI_SECRET_DE_PRUEBA"
 
 
 
@@ -9,11 +9,11 @@ oc create secret generic transaccionesflotantes-secrets-prueba-procesadortarjeta
 
 
 oc create configmap transaccionesflotantes-configmap-prueba-procesadortarjetas \
-  --from-literal=APISETTINGS__BASEADDRESSACCESSTOKEN=https://auth.midominio.com \
-  --from-literal=APISETTINGS__BASEADDRESSTRANSACCIONESFLOTANTES=https://api.midominio.com \
-  --from-literal=APISETTINGS__ENDPOINTACCESSTOKEN=/token \
-  --from-literal=APISETTINGS__ENDPOINTTRANSACCIONES=/transacciones \
-  --from-literal=FORMURLENCODEDCONTENT__CLIENT_ID=mi-client-id \
-  --from-literal=FORMURLENCODEDCONTENT__GRANT_TYPE=client_credentials \
-  --from-literal=CURRENCYMAPPING__ENABLED=true \
-  --from-literal=APISETTINGS__ALLOWINVALIDCERTS=false
+  --from-literal=APISETTINGS__BASEADDRESSACCESSTOKEN="https://localhost:5001/" \
+  --from-literal=APISETTINGS__BASEADDRESSTRANSACCIONESFLOTANTES="https://localhost:5002/" \
+  --from-literal=APISETTINGS__ENDPOINTACCESSTOKEN="token" \
+  --from-literal=APISETTINGS__ENDPOINTTRANSACCIONES="transacciones" \
+  --from-literal=FORMURLENCODEDCONTENT__CLIENT_ID="MI_CLIENT_ID" \
+  --from-literal=FORMURLENCODEDCONTENT__GRANT_TYPE="client_credentials" \
+  --from-literal=CURRENCYMAPPING__ENABLED="true" \
+  --from-literal=APISETTINGS__ALLOWINVALIDCERTS="true"
