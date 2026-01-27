@@ -1,0 +1,9 @@
+oc create configmap transaccionesflotantes-configmap-prueba-procesadortarjetas \
+  --from-literal=APISETTINGS__BASEADDRESSACCESSTOKEN=https://auth.midominio.com \
+  --from-literal=APISETTINGS__BASEADDRESSTRANSACCIONESFLOTANTES=https://api.midominio.com \
+  --from-literal=APISETTINGS__ENDPOINTACCESSTOKEN=/token \
+  --from-literal=APISETTINGS__ENDPOINTTRANSACCIONES=/transacciones \
+  --from-literal=FORMURLENCODEDCONTENT__CLIENT_ID=mi-client-id \
+  --from-literal=FORMURLENCODEDCONTENT__GRANT_TYPE=client_credentials \
+  --from-literal=CURRENCYMAPPING__ENABLED=true \
+  --from-literal=APISETTINGS__ALLOWINVALIDCERTS=false
