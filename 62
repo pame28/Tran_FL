@@ -1,0 +1,39 @@
+1. Crear/Seleccionar el Namespace (Sino existe)
+oc create namespace transacciones-flotantes
+
+1.2. Cambiar al namespace creado
+oc project transacciones-flotantes
+
+2. Cargar la imagen desde archivo tarball
+podman load -i transacciones_flotantes.tar
+
+2.1. Verificar imagen cargada 
+podman images
+
+Nota: Debe aparecer algo como: transacciones_flotantes
+
+
+3. Crear secret
+oc create secret generic transaccionesflotantes-secrets-prueba-procesadortarjetas \
+  --from-literal=CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION="CADENA_DE_CONEXION"
+
+4. Crear configmap
+oc create configmap transaccionesflotantes-configmap-prueba-procesadortarjetas \
+  --from-literal=APISETTINGS__BASEADDRESSACCESSTOKEN="https://localhost:5001/" \
+  --from-literal=APISETTINGS__BASEADDRESSTRANSACCIONESFLOTANTES="https://localhost:5002/" \
+  --from-literal=APISETTINGS__ENDPOINTACCESSTOKEN="token" \
+  --from-literal=APISETTINGS__ENDPOINTTRANSACCIONES="transacciones" \
+  --from-literal=FORMURLENCODEDCONTENT__CLIENT_ID="MI_CLIENT_ID" \
+  --from-literal=FORMURLENCODEDCONTENT__GRANT_TYPE="client_credentials" \
+  --from-literal=CURRENCYMAPPING__ENABLED="true" \
+  --from-literal=APISETTINGS__ALLOWINVALIDCERTS="true"
+
+
+5. Crear Deployment
+oc apply -f deployment.yaml
+
+6. Implementar Pods
+oc 
+
+
+Mira, estos son los pasos que debo seguir para poder desplegar en openshoft utilizando una ventana de comandos, me gustaría probarlos, pero no se como hacerlo :c ya que yo desde mi maqina windows solo tengo acceso a openshift desde el navegador, porque lo que quiero hacer es desplegarlo yo, para ver si los paso a paso están bien
