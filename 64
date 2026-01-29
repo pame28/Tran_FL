@@ -1,3 +1,14 @@
+System.Data.OleDb.OleDbException: 'SQL0204: REIMQ07RC en BPPGM de tipo *N no encontrado.
+Causa . . . . . :   REIMQ07RC en BPPGM tipo *N no se ha encontrado. Si el nombre del miembro es *ALL, la tabla no se particiona. Si se trata de una sentencia ALTER TABLE y el tipo es *N, no se ha encontrado una restricción o partición. Si no se trata de una sentencia ALTER TABLE y el tipo es *N, no se ha encontrado una función, procedimiento, desencadenante u objeto de secuencia. Si no se ha encontrado una función, REIMQ07RC es el programa de servicio que contiene la función. La función no se encontrará a menos que el nombre externo y el nombre de uso coincidan exactamente. Una función no se considera candidata a menos que el usuario tenga el privilegio EXECUTE sobre la función.  Examine en las anotaciones de trabajo para ver si encuentra un mensaje que dé más detalles sobre el nombre de función que se está buscando y el nombre que no coincide. Recuperación . . . :   Cambie el nombre y vuelva a intentar la petición. Si el objeto es un grupo de nodos, asegúrese de que el producto DB2 Multisystem está instalado en el sistema y cree un grupo de nodos con el mandato CL CRTNODGRP. Si no se ha encontrado la función externa, asegúrese de que las mayúsculas y minúsculas del EXTERNAL NAME en la sentencia CREATE FUNCTION coinciden exactamente con las mayúsculas y minúsculas del nombre exportado por el programa de servicio.'
+
+
+
+
+using System;
+using System.Data;
+using System.Data.Odbc;
+using System.Data.OleDb;
+
 namespace AperturaMasiva
 {
     public class CPN
@@ -5,18 +16,17 @@ namespace AperturaMasiva
         public void EjecutaPGM()
         {
             // ============================
-            // CONEXIÓN ODBC A AS400
+            // CONEXIÓN OLEDB A AS400
             // ============================
             string connectionString =
-                "Driver={IBM i Access ODBC Driver};" +
-                "System=****;" +
-                "Uid=***;" +
-                "Pwd=****;" +
-                "DefaultLibraries=DP053DAT,CLIDAT,BPDAT,BPPGM,TARJETA;" +
-                "Naming=1;" +          // Sistema IBM i (LIB/OBJ)
-                "CommitMode=0;";       // *NONE (evita cuelgues)
-
-            using var conn = new OdbcConnection(connectionString);
+                "Provider=IBMDA400.DataSource.1;" +
+                "Data Source=****;" +
+                "User ID=*****;" +
+                "Password=*****;" +
+                "Initial Catalog=SBP720P;" +
+                "Persist Security Info=True;" +
+                "Catalog Library List=DP053DAT; Library List=CLIDAT; Library List=BPDAT; Library List=BPPGM; Library List=TARJETA;";
+            using var conn = new OleDbConnection(connectionString);
 
             // ============================
             // CONSTRUCCIÓN TRAMA (81)
@@ -31,7 +41,7 @@ namespace AperturaMasiva
             // ============================
             // CALL AL PROGRAMA RPG
             // ============================
-            using var cmd = new OdbcCommand(
+            using var cmd = new OleDbCommand(
                 "CALL BPPGM.REIMQ07RC(?)",
                 conn
             );
@@ -42,9 +52,9 @@ namespace AperturaMasiva
             // ============================
             // PARÁMETRO IN/OUT
             // ============================
-            var pTrama = new OdbcParameter
+            var pTrama = new OleDbParameter
             {
-                OdbcType = OdbcType.Char,
+                OleDbType = OleDbType.Char,
                 Size = 81,
                 Direction = ParameterDirection.InputOutput,
                 Value = trama
