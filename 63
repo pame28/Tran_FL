@@ -1,3 +1,16 @@
+CALL BPPGM.REIMQ07RC(
+  '5007            20280831                                               '
+)
+
+
+
+
+
+
+
+
+
+
 Necesito realizar pruebas con un programa de AS400 en DBVisualizer, pero no se como funciona :c 
 
 El programa es el REIMQ07RC(Este no es el programa final) está en la librería BPPGM, este recibe una trama de longitud 81 tipo char de la cual te detallo las posiciones:
