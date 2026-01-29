@@ -1,0 +1,86 @@
+using System;
+using System.Data;
+using System.Data.OleDb;
+
+namespace AperturaMasiva
+{
+    public class CPN
+    {
+
+        public void EjecutaPGM()
+        {
+            // Cadena de conexión AS400
+            OleDbConnection conn = new OleDbConnection(
+                "Provider=IBMDA400.DataSource.1;" +
+                "Data Source=****;" +
+                "User ID=***;" +
+                "Password=****;" +
+                "Initial Catalog=SBP720P" +
+                "Persist Security Info=True;" +
+                "Library List=DP053DAT CLIDAT BPDAT BPPGM TARJETA"
+            );
+
+            // ============================
+            // Construcción de la TRAMA (81)
+            // ============================
+            string trama =
+                "5007".PadRight(16) +   // 1–16  Equivalente TC
+                "20280831" +            // 17–24 Fecha Vencimiento
+                "2802" +                // 25–28 PIN
+                "".PadRight(3) +        // 29–31 Código Error (entrada)
+                "".PadRight(50);        // 32–81 Descripción Error (entrada)
+
+            // ============================
+            // CALL al programa RPG
+            // ============================
+            OleDbCommand cmd = new OleDbCommand("CALL BPPGM.SP_REIMQ07RC(?)", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandTimeout = 300;
+
+            // ============================
+            // ÚNICO parámetro IN/OUT
+            // ============================
+            OleDbParameter pTrama = new OleDbParameter
+            {
+                OleDbType = OleDbType.Char,
+                Size = 81,
+                Direction = ParameterDirection.InputOutput,
+                Value = trama
+            };
+
+            cmd.Parameters.Add(pTrama);
+
+            // ============================
+            // Ejecutar
+            // ============================
+            conn.Open();
+            cmd.ExecuteNonQuery();
+            conn.Close();
+
+            // ============================
+            // Resultado devuelto por RPG
+            // ============================
+            string tramaSalida = pTrama.Value.ToString();
+
+            string codigoError = tramaSalida.Substring(28, 3);   // Pos 29–31
+            string descripcionError = tramaSalida.Substring(31, 50); // Pos 32–81
+
+            // ============================
+            // Resultado final
+            // ============================
+            Console.WriteLine("TRAMA SALIDA : " + tramaSalida);
+            Console.WriteLine("COD ERROR    : " + codigoError);
+            Console.WriteLine("DESC ERROR   : " + descripcionError);
+        }
+    }
+}
+
+
+
+Se puede acceder a este sitio de llamada en todas las plataformas. "OleDbConnection" solo se admite en 'windows'.
+
+
+
+Ayudame a corregir todo esto, por favor
+
+
