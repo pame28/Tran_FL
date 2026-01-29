@@ -1,48 +1,50 @@
-using System;
-using System.Data;
-using System.Data.OleDb;
-
 namespace AperturaMasiva
 {
     public class CPN
     {
-
         public void EjecutaPGM()
         {
-            // Cadena de conexión AS400
-            OleDbConnection conn = new OleDbConnection(
-                "Provider=IBMDA400.DataSource.1;" +
-                "Data Source=****;" +
-                "User ID=***;" +
-                "Password=****;" +
-                "Initial Catalog=SBP720P" +
-                "Persist Security Info=True;" +
-                "Library List=DP053DAT CLIDAT BPDAT BPPGM TARJETA"
-            );
+            // ============================
+            // CONEXIÓN ODBC A AS400
+            // ============================
+            string connectionString =
+                "Driver={IBM i Access ODBC Driver};" +
+                "System=****;" +
+                "Uid=***;" +
+                "Pwd=****;" +
+                "DefaultLibraries=DP053DAT,CLIDAT,BPDAT,BPPGM,TARJETA;" +
+                "Naming=1;" +          // Sistema IBM i (LIB/OBJ)
+                "CommitMode=0;";       // *NONE (evita cuelgues)
+
+            using var conn = new OdbcConnection(connectionString);
 
             // ============================
-            // Construcción de la TRAMA (81)
+            // CONSTRUCCIÓN TRAMA (81)
             // ============================
             string trama =
                 "5007".PadRight(16) +   // 1–16  Equivalente TC
                 "20280831" +            // 17–24 Fecha Vencimiento
                 "2802" +                // 25–28 PIN
-                "".PadRight(3) +        // 29–31 Código Error (entrada)
-                "".PadRight(50);        // 32–81 Descripción Error (entrada)
+                "".PadRight(3) +        // 29–31 Código Error
+                "".PadRight(50);        // 32–81 Descripción Error
 
             // ============================
-            // CALL al programa RPG
+            // CALL AL PROGRAMA RPG
             // ============================
-            OleDbCommand cmd = new OleDbCommand("CALL BPPGM.SP_REIMQ07RC(?)", conn);
+            using var cmd = new OdbcCommand(
+                "CALL BPPGM.REIMQ07RC(?)",
+                conn
+            );
+
             cmd.CommandType = CommandType.Text;
             cmd.CommandTimeout = 300;
 
             // ============================
-            // ÚNICO parámetro IN/OUT
+            // PARÁMETRO IN/OUT
             // ============================
-            OleDbParameter pTrama = new OleDbParameter
+            var pTrama = new OdbcParameter
             {
-                OleDbType = OleDbType.Char,
+                OdbcType = OdbcType.Char,
                 Size = 81,
                 Direction = ParameterDirection.InputOutput,
                 Value = trama
@@ -51,36 +53,23 @@ namespace AperturaMasiva
             cmd.Parameters.Add(pTrama);
 
             // ============================
-            // Ejecutar
+            // EJECUCIÓN
             // ============================
             conn.Open();
             cmd.ExecuteNonQuery();
             conn.Close();
 
             // ============================
-            // Resultado devuelto por RPG
+            // RESPUESTA
             // ============================
             string tramaSalida = pTrama.Value.ToString();
 
-            string codigoError = tramaSalida.Substring(28, 3);   // Pos 29–31
-            string descripcionError = tramaSalida.Substring(31, 50); // Pos 32–81
+            string codigoError = tramaSalida.Substring(28, 3);
+            string descripcionError = tramaSalida.Substring(31, 50);
 
-            // ============================
-            // Resultado final
-            // ============================
             Console.WriteLine("TRAMA SALIDA : " + tramaSalida);
             Console.WriteLine("COD ERROR    : " + codigoError);
             Console.WriteLine("DESC ERROR   : " + descripcionError);
         }
     }
 }
-
-
-
-Se puede acceder a este sitio de llamada en todas las plataformas. "OleDbConnection" solo se admite en 'windows'.
-
-
-
-Ayudame a corregir todo esto, por favor
-
-
