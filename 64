@@ -1,2 +1,90 @@
-SPECIFIC_SCHEMA	SPECIFIC_NAME	ROUTINE_SCHEMA	ROUTINE_NAME	ROUTINE_TYPE	ROUTINE_CREATED	ROUTINE_DEFINER	ROUTINE_BODY	EXTERNAL_NAME	EXTERNAL_LANGUAGE	PARAMETER_STYLE	IS_DETERMINISTIC	SQL_DATA_ACCESS	SQL_PATH	NUMBER_OF_RESULTS	MAX_DYNAMIC_RESULT_SETS	IN_PARMS	OUT_PARMS	INOUT_PARMS	LONG_COMMENT	FUNCTION_ORIGIN	FUNCTION_TYPE	EXTERNAL_ACTION	IS_NULL_CALL	SCRATCH_PAD	FINAL_CALL	PARALLELIZABLE	DBINFO	SOURCE_SPECIFIC_SCHEMA	SOURCE_SPECIFIC_NAME	IS_USER_DEFINED_CAST	CARDINALITY	FENCED	COMMIT_ON_RETURN	IASP_NUMBER	NEW_SAVEPOINT_LEVEL	LAST_ALTERED	DEBUG_MODE	ROUNDING_MODE	ROUTINE_TEXT	SECURE	RESTRICT_ON_DROP
-BPPGM	SP_RPESINCONS	BPPGM	SP_REIMQ07RC	PROCEDURE	2026-01-28 11:44:24	CONSOLA_DC	SQL	BPPGM/SP_RP00001	(null)	(null)	NO	MODIFIES	"QSYS","QSYS2","SYSPROC","SYSIBMADM","CONSOLA_DC"	0	1	1	0	0	(null)	 	 	E	(null)	(null)	(null)	(null)	NO	(null)	(null)	(null)	(null)	(null)	NO	0	NO	(null)	0	E	(null)	N	NO
+using System;
+using System.Data;
+using System.Data.OleDb;
+
+namespace AperturaMasiva
+{
+    public class CPN
+    {
+        public void EjecutaPGM()
+        {
+            // ============================
+            // CONEXIÓN OLEDB A AS400
+            // ============================
+            string connectionString =
+                "Provider=IBMDA400.DataSource.1;" +
+                "Data Source=****;" +
+                "User ID=*****;" +
+                "Password=*****;" +
+                "Initial Catalog=SBP720P;" +
+                "Persist Security Info=True;" +
+                "Catalog Library List=DP053DAT; Library List=CLIDAT; Library List=BPDAT; Library List=BPPGM; Library List=TARJETA;";
+            
+            using var conn = new OleDbConnection(connectionString);
+
+            // ============================
+            // CONSTRUCCIÓN TRAMA (81)
+            // ============================
+            string trama =
+                "5007".PadRight(16) +   // 1–16  Equivalente TC
+                "20280831" +            // 17–24 Fecha Vencimiento
+                "2802" +                // 25–28 PIN
+                "".PadRight(3) +        // 29–31 Código Error
+                "".PadRight(50);        // 32–81 Descripción Error
+
+            Console.WriteLine("TRAMA ENTRADA: [" + trama + "]");
+
+            // ============================
+            // CALL AL PROCEDURE SQL CORRECTO
+            // ============================
+            using var cmd = new OleDbCommand(
+                "CALL BPPGM.SP_REIMQ07RC(?)", // <- Procedure correcto
+                conn
+            );
+
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandTimeout = 300;
+
+            // ============================
+            // PARÁMETRO IN/OUT
+            // ============================
+            var pTrama = new OleDbParameter
+            {
+                OleDbType = OleDbType.Char,
+                Size = 81,                     // Debe coincidir con RPG
+                Direction = ParameterDirection.InputOutput,
+                Value = trama
+            };
+
+            cmd.Parameters.Add(pTrama);
+
+            // ============================
+            // EJECUCIÓN
+            // ============================
+            Console.WriteLine("ANTES DEL CALL");
+
+            conn.Open();
+            cmd.ExecuteNonQuery();
+            conn.Close();
+
+            Console.WriteLine("DESPUÉS DEL CALL");
+
+            // ============================
+            // RESPUESTA
+            // ============================
+            string tramaSalida = pTrama.Value.ToString();
+
+            // Extraemos código y descripción de error según posiciones
+            string codigoError = tramaSalida.Substring(28, 3);
+            string descripcionError = tramaSalida.Substring(31, 50);
+
+            Console.WriteLine("TRAMA SALIDA : [" + tramaSalida + "]");
+            Console.WriteLine("COD ERROR    : [" + codigoError + "]");
+            Console.WriteLine("DESC ERROR   : [" + descripcionError + "]");
+
+            // Para que la consola no se cierre automáticamente
+            Console.WriteLine("Presione ENTER para salir...");
+            Console.ReadLine();
+        }
+    }
+}
