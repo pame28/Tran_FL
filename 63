@@ -1,0 +1,16 @@
+Necesito realizar pruebas con un programa de AS400 en DBVisualizer, pero no se como funciona :c 
+
+El programa es el REIMQ07RC(Este no es el programa final) está en la librería BPPGM, este recibe una trama de longitud 81 tipo char de la cual te detallo las posiciones:
+Campo	Posición Inicial	Posición Final	Tamaño
+Equivalente TC	1	16	16
+Fecha Vencimiento TC	17	24	8
+PIN TC	25	28	4
+Código Error	29	31	3
+Descripción Error	32	81	50
+
+
+
+Usa esta tarjeta  y esta fecha de vencimiento: 
+
+	--Equivalente Tarjeta (tarjeta imprimir): 5007
+	--Fecha Vencimiento: 2028-08-31
