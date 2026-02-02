@@ -1,51 +1,5 @@
-using System;
-using System.Data;
-using System.Data.OleDb;
+PROCEDURE_CAT	PROCEDURE_SCHEM	PROCEDURE_NAME	COLUMN_NAME	COLUMN_TYPE	DATA_TYPE	TYPE_NAME	PRECISION	LENGTH	SCALE	RADIX	NULLABLE	REMARKS	SQL_DATA_TYPE	SQL_DATETIME_SUB	CHAR_OCTET_LENGTH	ORDINAL_POSITION	IS_NULLABLE	SPECIFIC_NAME
+"SBP720P"	"BPPGM"	"SP_REIMQ07RC"	"V_INFO"	1	1	"CHAR"	81	81	(null)	(null)	1	(null)	1	(null)	81	1	"YES"	"SP_RPESINCONS"
 
-class Program
-{
-    static string ConstruirTrama(string equivalenteTC, string fechaVencimiento, string pin)
-    {
-        string trama = string.Empty;
-        trama += equivalenteTC.PadRight(16);
-        trama += fechaVencimiento.PadRight(8);
-        trama += pin.PadRight(4);
-        trama += "".PadRight(53); // Resto de la trama para completar 81
-        return trama.PadRight(81);
-    }
 
-    static void Main()
-    {
-        string connectionString =
-            "Provider=IBMDA400;" +
-            "Data Source=MI_AS400;" +
-            "User ID=USUARIO;" +
-            "Password=PASSWORD;";
-
-        string trama = ConstruirTrama("1234567890123456", "20261231", "1234");
-
-        using (OleDbConnection conn = new OleDbConnection(connectionString))
-        {
-            conn.Open();
-
-            OleDbCommand cmd = new OleDbCommand("CALL BPPGM.REIMQ07RC(?)", conn);
-
-            OleDbParameter param = new OleDbParameter
-            {
-                OleDbType = OleDbType.Char,
-                Size = 81,
-                Direction = ParameterDirection.InputOutput,
-                Value = trama
-            };
-
-            cmd.Parameters.Add(param);
-
-            cmd.ExecuteNonQuery();
-
-            // Imprimir la trama completa de salida
-            string tramaSalida = param.Value.ToString();
-            Console.WriteLine("TRAMA DEVUELTA:");
-            Console.WriteLine($"[{tramaSalida}]");
-        }
-    }
-}
+Mira, esto es lo unico que tengo del programa, la verdad no se qu ehacer, porque siento que soy yo la del problema, de no poder consumirlo
