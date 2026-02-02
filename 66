@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transacciones-flotantes
+  labels:
+    app: transacciones-flotantes
+    app.kubernetes.io/part-of: transaccioness-flotantes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transacciones-flotantes
+  template:
+    metadata:
+      labels:
+        app: transacciones-flotantes
+        app.kubernetes.io/part-of: transaccioness-flotantes
+    spec:
+      hostAliases:
+        - ip: **.**.**.**
+          hostnames:
+            - "******"
+      containers:
+        - name: transacciones-flotantes
+          image: image-registry.openshift-image-registry.svc:5000/des-procesadortc-bp/transacciones-flotantes:1.0
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: transaccionesflotantes-configmap-prueba-procesadortarjetas
+            - secretRef:
+                name: transaccionesflotantes-secrets-prueba-procesadortarjetas
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      restartPolicy: Always
+
+
+Mira, este es mi deployment... 
+
+
+Paso 10: En la terminal, crear el ImageStream  ejecutando el siguiente comando: oc create imagestream transacciones-flotantes -n des-procesadortc-bp										
+"Paso 11: En la terminal, Asociar el tag al ImageStream: 
+oc tag \
+default-route-openshift-image-registry.apps.ocp4bppu.hn.bi-central.local/des-procesadortc-bp/transacciones-flotantes:1.0 \
+transacciones-flotantes:1.0 \
+-n des-procesadortc-bp"										
+
+
+Y estos son los pasos extras, cual es mi error?
