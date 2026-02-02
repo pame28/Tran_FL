@@ -1,0 +1,12 @@
+Error from server (BadRequest): error when creating "transaccionesflotantes-secrets-pruebaa-procesadortarjetas.yaml": Secret in version "v1" cannot be handled as a Secret: illegal base64 data at input byte 6
+[adm_80730@PU-OCPBAST1 02-transacciones-flotant
+
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: transaccionesflotantes-secrets-pruebaa-procesadortarjetas
+type: Opaque
+data:
+  CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION: "*******"
+  FORMURLENCODEDCONTENT__CLIENT_SECRET: "MI_SECRET_DE_PRUEBA"
