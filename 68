@@ -4,32 +4,16 @@ using System.Data.OleDb;
 
 class Program
 {
-    // Función para construir la trama de 81 chars
     static string ConstruirTrama(string equivalenteTC, string fechaVencimiento, string pin)
     {
         string trama = string.Empty;
-
-        trama += equivalenteTC.PadRight(16);    // 1-16
-        trama += fechaVencimiento.PadRight(8); // 17-24
-        trama += pin.PadRight(4);               // 25-28
-        trama += "".PadRight(3);                // 29-31 (Código Error)
-        trama += "".PadRight(50);               // 32-81 (Descripción Error)
-
-        return trama.PadRight(81);              // Siempre 81 chars
+        trama += equivalenteTC.PadRight(16);
+        trama += fechaVencimiento.PadRight(8);
+        trama += pin.PadRight(4);
+        trama += "".PadRight(53); // Resto de la trama para completar 81
+        return trama.PadRight(81);
     }
 
-    // Función para procesar la respuesta del AS400
-    static void ProcesarRespuesta(string trama)
-    {
-        string codigoError = trama.Substring(28, 3).Trim();  // 29-31
-        string descripcion = trama.Substring(31, 50).Trim(); // 32-81
-
-        Console.WriteLine("=== RESPUESTA AS400 ===");
-        Console.WriteLine($"Código Error: {codigoError}");
-        Console.WriteLine($"Descripción: {descripcion}");
-    }
-
-    // Programa principal
     static void Main()
     {
         string connectionString =
@@ -38,19 +22,13 @@ class Program
             "User ID=USUARIO;" +
             "Password=PASSWORD;";
 
-        // Construir la trama de prueba
-        string trama = ConstruirTrama(
-            "1234567890123456", // Equivalente TC
-            "20261231",         // Fecha Vencimiento
-            "1234"              // PIN
-        );
+        string trama = ConstruirTrama("1234567890123456", "20261231", "1234");
 
         using (OleDbConnection conn = new OleDbConnection(connectionString))
         {
             conn.Open();
 
-            OleDbCommand cmd = new OleDbCommand(
-                "CALL BPPGM.REIMQ07RC(?)", conn);
+            OleDbCommand cmd = new OleDbCommand("CALL BPPGM.REIMQ07RC(?)", conn);
 
             OleDbParameter param = new OleDbParameter
             {
@@ -64,13 +42,10 @@ class Program
 
             cmd.ExecuteNonQuery();
 
+            // Imprimir la trama completa de salida
             string tramaSalida = param.Value.ToString();
-
-            // Procesar la respuesta
-            ProcesarRespuesta(tramaSalida);
-
-            // Para debug: ver toda la trama
-            Console.WriteLine($"TRAMA RAW: [{tramaSalida}]");
+            Console.WriteLine("TRAMA DEVUELTA:");
+            Console.WriteLine($"[{tramaSalida}]");
         }
     }
 }
