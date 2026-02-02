@@ -1,0 +1,31 @@
+Crear una carpeta llamada Transacciones Flotantes en MobaXterm										
+Pasar archivos: deployment-transacciones-flotantes.yaml , service-transacciones-flotantes.yaml , route-transacciones-flotantes.yaml a la carpeta creada en el paso anterior										
+En MobaXterm cargar la imagen ejecutando el siguiente comando: podman load -i transacciones-flotantes.tar										
+"En MobaXterm crear el tag para Openshoft ejecutando el siguiente comando: podman tag docker.io/library/transacciones-flotantes:1.0 \
+default-route-openshift-image-registry.apps.ocp4bppu.hn.bi-central.local/des-procesadortc-bp/transacciones-flotantes:1.0"										
+En MobaXterm hacer login al cluster: oc login --token=sha256~dcJ37Nre7NkvjaSk-sSJTecfQVfSr3bgwIYM-2eRJBU --server=https://api.ocp4bppu.hn.bi-central.local:6443										
+En MobaXterm hace login al registry: podman login -u $(oc whoami) -p $(oc whoami -t) default-route-openshift-image-registry.apps.ocp4bppu.hn.bi-central.local --tls-verify=false										
+"En MobaXterm hacer push de la imagen ejecutando el siguiente comando: podman push --tls-verify=false \
+default-route-openshift-image-registry.apps.ocp4bppu.hn.bi-central.local/des-procesadortc-bp/transacciones-flotantes:1.0"										
+En MobaXterm crear el ImageStream  ejecutando el siguiente comando: oc create imagestream transacciones-flotantes -n des-procesadortc-bp										
+"En MobaXterm Asociar el tag al ImageStream: oc tag \
+default-route-openshift-image-registry.apps.ocp4bppu.hn.bi-central.local/des-procesadortc-bp/transacciones-flotantes:1.0 \
+transacciones-flotantes:1.0 \
+-n des-procesadortc-bp"										
+"En MobaXterm Crear secrets  ejecutando el siguiente comando:
+ oc create secret generic transaccionesflotantes-secrets-prueba-procesadortarjetas \
+  --from-literal=CONNECTIONSTRINGS__TRANSACCIONESFLOTANTESCONNECTION="*********" \
+  --from-literal=FORMURLENCODEDCONTENT__CLIENT_SECRET=""MI_SECRET_DE_PRUEBA"""										
+"En MobaXterm Crear configmaps  ejecutando el siguiente comando: 
+ oc create configmap transaccionesflotantes-configmap-prueba-procesadortarjetas \
+  --from-literal=APISETTINGS__BASEADDRESSACCESSTOKEN=""https://localhost:5001/"" \
+  --from-literal=APISETTINGS__BASEADDRESSTRANSACCIONESFLOTANTES=""https://localhost:5002/"" \
+  --from-literal=APISETTINGS__ENDPOINTACCESSTOKEN=""token"" \
+  --from-literal=APISETTINGS__ENDPOINTTRANSACCIONES=""transacciones"" \
+  --from-literal=FORMURLENCODEDCONTENT__CLIENT_ID=""MI_CLIENT_ID"" \
+  --from-literal=FORMURLENCODEDCONTENT__GRANT_TYPE=""client_credentials"" \
+  --from-literal=CURRENCYMAPPING__ENABLED=""true"" \
+  --from-literal=APISETTINGS__ALLOWINVALIDCERTS=""true"""										
+En MobaXterm Crear el deploymet  ejecutando el siguiente comando: oc apply -f deployment-transacciones-flotantes.yaml										
+En MobaXterm Crear el service  ejecutando el siguiente comando: oc apply -f service-transacciones-flotantes.yaml										
+En MobaXterm Crear el route  ejecutando el siguiente comando: oc apply -f route-transacciones-flotantes.yaml										
